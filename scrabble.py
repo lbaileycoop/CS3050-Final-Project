@@ -1,14 +1,45 @@
 import arcade
 
-WINDOW_WIDTH = 1280
-WINDOW_HEIGHT = 720
+WINDOW_WIDTH = 950
+WINDOW_HEIGHT = 950
 WINDOW_TITLE = "Scrabble"
+
+ROWS = 15
+COLS = 15
+
+TILE_SIZE = 45
+TILE_GAP = 5
+BORDER = 125
+
+BASE_TILE = './assets/blank.png'
+
+# MULTIPLIER_COORDS: Dict[str, List[(x, y)]] = 
 
 class ScrabbleUI(arcade.View):
     def __init__(self):
         super().__init__();
 
-        self.background_color = arcade.color.BLUE
+        self.background_color = arcade.color.BISTRE_BROWN
+
+        # Holds the current board state, empty tiles are initialized as None
+        self.board: arcade.SpriteList = arcade.SpriteList()
+        for i in range(ROWS * COLS):
+            tile = Tile(' ', 0, True)
+            coords = self.to_coords(i)
+            tile.sprite.center_x = coords[0] * (TILE_SIZE + TILE_GAP) + BORDER
+            tile.sprite.center_y = coords[1] * (TILE_SIZE + TILE_GAP) + BORDER
+
+            tile.textSprite.center_x = tile.sprite.center_x
+            tile.textSprite.center_y = tile.sprite.center_y
+
+            self.board.append(tile.sprite)
+            # self.board.append(tile.textSprite)
+
+        # Holds the states of every player, each of which are stored as a 2-tuple of their rack and current scort
+        self.players: List[(List[Tile], int)] = []
+
+        # Holds the current turn, will be incremented by 1 mod len(players) each turn
+        self.turn: int = 0
         
 
     def reset(self):
@@ -29,6 +60,19 @@ class ScrabbleUI(arcade.View):
 
         # Call draw() on all your sprite lists below
 
+        
+        self.board.initialize()
+        self.board.draw()
+        self.board.draw_hit_boxes()
+
+
+    def to_coords(self, index: int) -> (int, int):
+        """Returns the x and y values of a tile based on the 1-d index"""
+        return (index % COLS, (index // COLS))
+
+    def from_coords(self, x: int, y: int) -> (int, int):
+        """Returns the 1-d index of a tile based on the x and y values"""
+        return x + ((ROWS - y) * COLS)
 
     def on_update(self, delta_time):
         """
@@ -39,7 +83,6 @@ class ScrabbleUI(arcade.View):
 
         pass
 
-
     def on_key_press(self, key, key_modifiers):
         """
         Called whenever a key on the keyboard is pressed.
@@ -49,14 +92,12 @@ class ScrabbleUI(arcade.View):
 
         pass
 
-
     def on_key_release(self, key, key_modifiers):
         """
         Called whenever the user lets off a previously pressed key.
         """
 
         pass
-
 
     def on_mouse_motion(self, x, y, delta_x, delta_y):
         """
@@ -73,13 +114,31 @@ class ScrabbleUI(arcade.View):
 
         pass
 
-
     def on_mouse_release(self, x, y, button, key_modifiers):
         """
         Called when a user releases a mouse button.
         """
 
         pass
+
+class Tile():
+    def __init__(self, letter: str, value: int, is_empty: bool = False):
+        self.sprite = arcade.Sprite(BASE_TILE)
+        self.textSprite = arcade.create_text_sprite(letter, arcade.color.BLACK, font_size=24)
+        self.sprite.size = (TILE_SIZE, TILE_SIZE)
+
+        if not is_empty:
+            self.letter = letter
+            self.value = value
+            self.sprite.color = arcade.color.TAN
+        else:
+            self.sprite.color = arcade.color.DARK_BROWN
+    
+    def update():
+        arcade.draw
+
+
+
     
 def main():
     window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
