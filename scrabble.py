@@ -13,8 +13,6 @@ BORDER = 125
 
 BASE_TILE = './assets/blank.png'
 
-# MULTIPLIER_COORDS: Dict[str, List[(x, y)]] = 
-
 class ScrabbleUI(arcade.View):
     def __init__(self):
         super().__init__();
@@ -33,13 +31,7 @@ class ScrabbleUI(arcade.View):
             tile.textSprite.center_y = tile.sprite.center_y
 
             self.board.append(tile.sprite)
-            # self.board.append(tile.textSprite)
-
-        # Holds the states of every player, each of which are stored as a 2-tuple of their rack and current scort
-        self.players: List[(List[Tile], int)] = []
-
-        # Holds the current turn, will be incremented by 1 mod len(players) each turn
-        self.turn: int = 0
+            self.board.append(tile.textSprite)
         
 
     def reset(self):
@@ -63,7 +55,6 @@ class ScrabbleUI(arcade.View):
         
         self.board.initialize()
         self.board.draw()
-        self.board.draw_hit_boxes()
 
 
     def to_coords(self, index: int) -> (int, int):
