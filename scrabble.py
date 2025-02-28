@@ -17,6 +17,7 @@ class ScrabbleUI(arcade.View):
     def __init__(self):
         super().__init__();
 
+
         self.background_color = arcade.color.BISTRE_BROWN
 
         # Holds the current board state, empty tiles are initialized as None
