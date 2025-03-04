@@ -343,7 +343,7 @@ class ScrabbleUI(arcade.View):
                 self.held_tile = tile
                 self.held_tile_index = i
                 break
-
+                
     def on_mouse_release(self, x, y, button, key_modifiers):
         """
         Called when a user releases a mouse button.
@@ -381,22 +381,22 @@ class ScrabbleUI(arcade.View):
                 for i, rack_tile in enumerate(self.rack_tiles):
                     if rack_tile.collides_with_point((x, y)):
                         rack_index = i
-                        break
+                        
 
                 # Swap tiles in player's rack (not necessarily correct)
-                if rack_index is not None and rack_index != self.held_tile_index:
-                    self.player.rack.rack[self.held_tile_index], self.player.rack.rack[rack_index] = self.player.rack.rack[rack_index], self.player.rack.rack[self.held_tile_index]
-                    self.original_rack_positions[self.held_tile_index], self.original_rack_positions[rack_index] = self.original_rack_positions[rack_index], self.original_rack_positions[self.held_tile_index]
+                    if rack_index is not None and rack_index != self.held_tile_index:
+                        self.player.rack.rack[self.held_tile_index], self.player.rack.rack[rack_index] = self.player.rack.rack[rack_index], self.player.rack.rack[self.held_tile_index]
+                        self.original_rack_positions[self.held_tile_index], self.original_rack_positions[rack_index] = self.original_rack_positions[rack_index], self.original_rack_positions[self.held_tile_index]
 
-                    self.rack_tiles[self.held_tile_index].center_x = self.original_rack_positions[self.held_tile_index][0]
-                    self.rack_tiles[self.held_tile_index].center_y = self.original_rack_positions[self.held_tile_index][1]
-                    self.rack_tiles[rack_index].center_x = self.original_rack_positions[rack_index][0]
-                    self.rack_tiles[rack_index].center_y = self.original_rack_positions[rack_index][1]
+                        self.rack_tiles[self.held_tile_index].center_x = self.original_rack_positions[self.held_tile_index][0]
+                        self.rack_tiles[self.held_tile_index].center_y = self.original_rack_positions[self.held_tile_index][1]
+                        self.rack_tiles[rack_index].center_x = self.original_rack_positions[rack_index][0]
+                        self.rack_tiles[rack_index].center_y = self.original_rack_positions[rack_index][1]
 
-                    self.rack_tiles[self.held_tile_index], self.rack_tiles[rack_index] = self.rack_tiles[rack_index], self.rack_tiles[self.held_tile_index]
+                        self.rack_tiles[self.held_tile_index], self.rack_tiles[rack_index] = self.rack_tiles[rack_index], self.rack_tiles[self.held_tile_index]
 
-                    self.logic_board.update_tile(self.held_tile_index, rack_index, self.player.rack.rack[self.held_tile_index])
-                    self.logic_board.update_tile(rack_index, self.held_tile_index, self.player.rack.rack[rack_index])
+                        self.logic_board.update_tile(self.held_tile_index, rack_index, self.player.rack.rack[self.held_tile_index])
+                        self.logic_board.update_tile(rack_index, self.held_tile_index, self.player.rack.rack[rack_index])
 
             # If the tile is not dragged to a valid spot on the board, reset it back to rack
             if not placed and self.held_tile_index is not None:
@@ -404,6 +404,7 @@ class ScrabbleUI(arcade.View):
                 self.held_tile.center_x = original_x
                 self.held_tile.center_y = original_y
 
+            
             self.held_tile = None
             self.held_tile_index = None
 
