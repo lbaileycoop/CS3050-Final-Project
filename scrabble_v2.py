@@ -3,7 +3,8 @@ import arcade
 from random import shuffle
 
 # Dynamically adjust graphics according to user's display size
-WINDOW_WIDTH, WINDOW_HEIGHT = arcade.get_display_size()
+WINDOW_WIDTH = 750
+WINDOW_HEIGHT = 750
 WINDOW_TITLE = "Scrabble"
 BOARD_SIZE = min(WINDOW_WIDTH, WINDOW_HEIGHT) * 0.6
 ROWS = 15
@@ -33,6 +34,14 @@ class Tile():
         # Create a sprite for rendering tile graphics
         self.sprite = arcade.Sprite(image_path)
         self.sprite.size = (TILE_SIZE, TILE_SIZE)
+
+    def set_letter(self, new_letter, value, new_letter_image: str):
+        """ Sets a new letter and image for a blank tile """
+        if self.letter == '':
+            self.letter = new_letter
+            self.value = value
+            self.image_path = new_letter_image
+            self.sprite.texture = arcade.load_texture(new_letter_image)
 
 # Dictionary to define and store all tiles
 TILES = {
@@ -70,6 +79,7 @@ TILES = {
     "z": Tile('z', 10, "./assets/tiles/z.png"),
     "blank": Tile('', 0, "./assets/tiles/clear.png"),
 }
+
 
 class Drawbag():
     """
@@ -223,6 +233,7 @@ class Board():
     def update_tile(self, x: int, y: int, tile: Tile):
         """ Function to update a tile in the board """
         self.board[y][x] = tile
+    
 
 class ScrabbleUI(arcade.View):
     def __init__(self):
@@ -364,15 +375,38 @@ class ScrabbleUI(arcade.View):
                     
                     placed = True
                     break
-            
+
+            if not placed:
+                rack_index = None
+                for i, rack_tile in enumerate(self.rack_tiles):
+                    if rack_tile.collides_with_point((x, y)):
+                        rack_index = i
+                        break
+
+                # Swap tiles in player's rack (not necessarily correct)
+                if rack_index is not None and rack_index != self.held_tile_index:
+                    self.player.rack.rack[self.held_tile_index], self.player.rack.rack[rack_index] = self.player.rack.rack[rack_index], self.player.rack.rack[self.held_tile_index]
+                    self.original_rack_positions[self.held_tile_index], self.original_rack_positions[rack_index] = self.original_rack_positions[rack_index], self.original_rack_positions[self.held_tile_index]
+
+                    self.rack_tiles[self.held_tile_index].center_x = self.original_rack_positions[self.held_tile_index][0]
+                    self.rack_tiles[self.held_tile_index].center_y = self.original_rack_positions[self.held_tile_index][1]
+                    self.rack_tiles[rack_index].center_x = self.original_rack_positions[rack_index][0]
+                    self.rack_tiles[rack_index].center_y = self.original_rack_positions[rack_index][1]
+
+                    self.rack_tiles[self.held_tile_index], self.rack_tiles[rack_index] = self.rack_tiles[rack_index], self.rack_tiles[self.held_tile_index]
+
+                    self.logic_board.update_tile(self.held_tile_index, rack_index, self.player.rack.rack[self.held_tile_index])
+                    self.logic_board.update_tile(rack_index, self.held_tile_index, self.player.rack.rack[rack_index])
+
             # If the tile is not dragged to a valid spot on the board, reset it back to rack
             if not placed and self.held_tile_index is not None:
                 original_x, original_y = self.original_rack_positions[self.held_tile_index]
                 self.held_tile.center_x = original_x
                 self.held_tile.center_y = original_y
-            
+
             self.held_tile = None
             self.held_tile_index = None
+
 
 def main():
     window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
