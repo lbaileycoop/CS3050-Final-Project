@@ -78,7 +78,7 @@ class ScrabbleUI(arcade.View):
         # displays miscellaneous graphics
         self.other_sprites: arcade.SpriteList = arcade.SpriteList()
         self.board_background = arcade.Sprite("./assets/images/background.png")
-        self.board_background.size = (WINDOW_WIDTH * 0.43, WINDOW_WIDTH * 0.43)
+        self.board_background.size = (BOARD_SIZE*1.15, BOARD_SIZE*1.15)
         self.board_background.center_x = 7 * (TILE_SIZE + TILE_GAP) + BORDER_X
         self.board_background.center_y = (ROWS - 8) * (TILE_SIZE + TILE_GAP) + BORDER_Y*1.5
         self.other_sprites.append(self.board_background)
