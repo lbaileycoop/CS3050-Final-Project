@@ -15,6 +15,52 @@ DOCK_SIZE_Y = int(BOARD_SIZE / 4)
 BORDER_X = (WINDOW_WIDTH - BOARD_SIZE) // 2
 BORDER_Y = (WINDOW_HEIGHT - BOARD_SIZE) // 2
 
+class StartScreen(arcade.View):
+    """A simple start screen for the Scrabble game."""
+    def __init__(self):
+        super().__init__()
+        self.background_color = arcade.color.DARK_SLATE_GRAY  # Fallback color if image fails
+        # Load the background image
+        try:
+            self.background = arcade.load_texture("./assets/Background.png")
+        except FileNotFoundError:
+            self.background = None  # Handle case where image is missing
+            print("Warning: Could not load start_screen.png. Using solid background color.")
+
+    def on_draw(self):
+        """Render the start screen."""
+        self.clear()
+        # Draw the background image if it exists
+        if self.background:
+            arcade.draw_texture_rectangle(
+                WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2,  # Center of the screen
+                WINDOW_WIDTH, WINDOW_HEIGHT,          # Stretch to fill the window
+                self.background
+            )
+        # Draw the title
+        arcade.draw_text(
+            "Scrabble",
+            WINDOW_WIDTH / 2,
+            WINDOW_HEIGHT / 2 + 50,
+            arcade.color.WHITE,
+            font_size=50,
+            anchor_x="center"
+        )
+        # Draw instructions
+        arcade.draw_text(
+            "Press any key to start",
+            WINDOW_WIDTH / 2,
+            WINDOW_HEIGHT / 2 - 50,
+            arcade.color.WHITE,
+            font_size=20,
+            anchor_x="center"
+        )
+
+    def on_key_press(self, key, modifiers):
+        """Switch to the Scrabble game when any key is pressed."""
+        game_view = ScrabbleUI()
+        self.window.show_view(game_view)
+
 class ScrabbleUI(arcade.View):
     def __init__(self):
         super().__init__()

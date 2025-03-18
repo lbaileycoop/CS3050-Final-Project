@@ -1,10 +1,10 @@
 import arcade
-from ui import ScrabbleUI, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE
+from ui import StartScreen, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE
 
 def main():
     window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
-    scrabble = ScrabbleUI()
-    window.show_view(scrabble)
+    start_screen = StartScreen()  # Start with the start screen
+    window.show_view(start_screen)
     arcade.run()
 
 if __name__ == '__main__':
