@@ -5,7 +5,7 @@ from random import shuffle
 # Dynamically adjust graphics according to user's display size
 WINDOW_WIDTH, WINDOW_HEIGHT = arcade.get_display_size()
 WINDOW_TITLE = "Scrabble"
-BOARD_SIZE = min(WINDOW_WIDTH, WINDOW_HEIGHT) * 0.6
+BOARD_SIZE = min(WINDOW_WIDTH, WINDOW_HEIGHT) * 0.45
 ROWS = 15
 COLS = 15
 TILE_SIZE = int(BOARD_SIZE / 15)
@@ -16,7 +16,7 @@ BORDER_X = (WINDOW_WIDTH - BOARD_SIZE) // 2
 BORDER_Y = (WINDOW_HEIGHT - BOARD_SIZE) // 2
 
 class Tile():
-    """ 
+    """
     Class representing a tile
 
     Attributes:
@@ -29,7 +29,7 @@ class Tile():
         self.letter = letter
         self.value = value
         self.image_path = image_path
-        
+
         # Create a sprite for rendering tile graphics
         self.sprite = arcade.Sprite(image_path)
         self.sprite.size = (TILE_SIZE, TILE_SIZE)
@@ -82,7 +82,7 @@ class Drawbag():
         """ Initializes a draw bag object """
         self.drawbag = []
         self.initialize_drawbag()
-    
+
     def add_tile(self, tile: Tile, quantity: int):
         """ Function to add a tile to the draw bag """
         for _ in range(quantity):
@@ -122,11 +122,11 @@ class Drawbag():
     def draw_tile(self):
         """ Function to simulate drawing a tile from the draw bag """
         return self.drawbag.pop()
-    
+
     def remaining_tiles(self):
         """ Function to get the amount of tiles remaining in the draw bag """
         return len(self.drawbag)
-    
+
 class Rack():
     """
     Class representing the rack of a player
@@ -142,24 +142,24 @@ class Rack():
     def add_tile(self, tile: Tile):
         """ Fucntion to add a tile to the current rack """
         self.rack.append(tile)
-    
+
     def get_rack(self):
         """ Getter function for the rack list """
         return self.rack
-    
+
     def remove_tile(self, tile: Tile):
         """ Removes a specified tile from the rack """
         self.rack.remove(tile)
-    
+
     def initialize_rack(self, drawbag: Drawbag):
         """ Initializes a rack for the beginning of the game with 7 tiles from the draw bag """
         for _ in range(7):
             self.rack.append(drawbag.draw_tile())
-    
+
     def len_rack(self):
         """ Function to get the amount of tiles in the current rack """
         return len(self.rack)
-    
+
 class Player():
     """
     Class representing a player
@@ -178,11 +178,11 @@ class Player():
     def get_rack(self):
         """ Getter function for the player's current rack """
         return self.rack.get_rack()
-    
+
     def get_score(self):
         """ Getter function for the player's current sore """
         return self.score
-    
+
     def add_score(self, score: int):
         """ Function to increment the player's score """
         self.score += score
@@ -215,7 +215,7 @@ class Board():
             [TILES["base"], TILES["double_word"], TILES["base"], TILES["base"], TILES["base"], TILES["triple_letter"], TILES["base"], TILES["base"], TILES["base"], TILES["triple_letter"], TILES["base"], TILES["base"], TILES["base"], TILES["double_word"], TILES["base"]],
             [TILES["triple_word"], TILES["base"], TILES["base"], TILES["double_letter"], TILES["base"], TILES["base"], TILES["base"], TILES["triple_word"], TILES["base"], TILES["base"], TILES["base"], TILES["double_letter"], TILES["base"], TILES["base"], TILES["triple_word"]],
         ]
-    
+
     def get_board(self):
         """ Getter function for the current board """
         return self.board
@@ -308,6 +308,7 @@ class ScrabbleUI(arcade.View):
         For a full list of keys, see:
         https://api.arcade.academy/en/latest/arcade.key.html
         """
+        pass
 
     def on_key_release(self, key, key_modifiers):
         """
@@ -339,38 +340,38 @@ class ScrabbleUI(arcade.View):
         """
         if self.held_tile:
             placed = False
-            
+
             # If a tile is dropped over a space on the board, update the board position to that tlie
             for i, board_sprite in enumerate(self.board):
                 if board_sprite.collides_with_point((x, y)):
                     col, row = self.to_coords(i)
-                    
+
                     letter = self.player.get_rack()[self.held_tile_index].letter
                     value = self.player.get_rack()[self.held_tile_index].value
                     image_path = self.player.get_rack()[self.held_tile_index].image_path
-                    
+
                     new_tile = Tile(letter, value, image_path)
-                    
+
                     self.logic_board.update_tile(col, row, new_tile)
-                    
+
                     board_sprite.texture = arcade.load_texture(image_path)
-                    
+
                     # Remove the played tile from the user's rack
                     self.player.rack.remove_tile(self.player.get_rack()[self.held_tile_index])
-                    
+
                     self.rack.remove(self.held_tile)
                     self.rack_tiles.remove(self.held_tile)
                     self.original_rack_positions.pop(self.held_tile_index)
-                    
+
                     placed = True
                     break
-            
+
             # If the tile is not dragged to a valid spot on the board, reset it back to rack
             if not placed and self.held_tile_index is not None:
                 original_x, original_y = self.original_rack_positions[self.held_tile_index]
                 self.held_tile.center_x = original_x
                 self.held_tile.center_y = original_y
-            
+
             self.held_tile = None
             self.held_tile_index = None
 
