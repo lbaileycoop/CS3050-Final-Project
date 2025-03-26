@@ -1,4 +1,9 @@
-from .config import *
+""" Module containing the definition for a ScrabbleUI object """
+
+import copy
+
+from .config import (arcade, ROWS, COLS, TILE_SIZE, TILE_GAP,
+                     BORDER_X, BORDER_Y, WINDOW_WIDTH, BOARD_SIZE)
 from .tile import Tile
 from .drawbag import Drawbag
 from .player import Player
@@ -6,9 +11,10 @@ from .board import Board
 from .utils import from_coords, to_coords
 from .game_manager import GameManager
 
-import copy
-
 class ScrabbleUI(arcade.View):
+    """
+    Class representing the Scrabble UI
+    """
     def __init__(self):
         super().__init__()
 
@@ -88,10 +94,12 @@ class ScrabbleUI(arcade.View):
         # Do changes needed to restart the game here if you want to support that
 
     def reset_turn(self):
-        """ Reset the game to its state at beginning of turn """
-        #For when user hits reset button or when an invalid word is played
+        """ 
+        Reset the game to its state at beginning of turn 
+        
+        For when user hits reset button or when an invalid word is played
+        """
         #TODO: implement
-        pass
 
     def on_draw(self):
         """
@@ -101,36 +109,13 @@ class ScrabbleUI(arcade.View):
         # the screen to the background color, and erase what we drew last frame.
         self.clear()
 
-        # Call draw() on all your sprite lists below
+        # Call draw() on all sprite lists below
         self.other_sprites.draw()
         self.board_sprites.draw()
         self.rack_sprites.draw()
         self.button_sprites.draw()
 
-
-    def on_update(self, delta_time):
-        """
-        All the logic to move, and the game logic goes here.
-        Normally, you'll call update() on the sprite lists that
-        need it.
-        """
-        pass
-
-    def on_key_press(self, key, key_modifiers):
-        """
-        Called whenever a key on the keyboard is pressed.
-        For a full list of keys, see:
-        https://api.arcade.academy/en/latest/arcade.key.html
-        """
-        pass
-
-    def on_key_release(self, key, key_modifiers):
-        """
-        Called whenever the user lets off a previously pressed key.
-        """
-        pass
-
-    def on_mouse_motion(self, x, y, delta_x, delta_y):
+    def on_mouse_motion(self, x, y, dx, dy):
         """
         Called whenever the mouse moves.
         """
@@ -142,7 +127,7 @@ class ScrabbleUI(arcade.View):
             else:
                 self.held_tile.sprite.scale = 1.2
 
-    def on_mouse_press(self, x, y, button, key_modifiers):
+    def on_mouse_press(self, x, y, button, modifiers):
         """
         Called when the user presses a mouse button.
         """
@@ -155,7 +140,6 @@ class ScrabbleUI(arcade.View):
             if button_sprite.collides_with_point((x, y)):
                 if button_sprite == self.reset_button:
                     self.reset_turn()
-                    pass
                 elif button_sprite == self.trade_in_button:
                     #TODO: implement tile trade in
                     pass
@@ -163,32 +147,32 @@ class ScrabbleUI(arcade.View):
                     #TODO: implement functionality for playing words
                     pass
 
-    def on_mouse_release(self, x, y, button, key_modifiers):
+    def on_mouse_release(self, x, y, button, modifiers):
         """
         Called when a user releases a mouse button.
         """
         if self.held_tile:
             placed = False
-            
+
             # If a tile is dropped over a space on the board, update the board position to that tile
             for i, board_sprite in enumerate(self.board_sprites):
                 if board_sprite.collides_with_point((x, y)):
                     col, row = to_coords(i)
-                    
+
                     letter = self.held_tile.letter
                     value = self.held_tile.value
                     image_path = self.held_tile.image_path
-                    
+
                     new_tile = Tile(letter, value, image_path)
-                    
+
                     self.board.update_tile(col, row, new_tile)
-                    
+
                     board_sprite.texture = arcade.load_texture(image_path)
-                    
+
                     self.player.rack.remove_tile(self.player.get_rack()[self.held_tile_index])
                     self.rack_sprites.remove(self.held_tile.sprite)
                     self.rack_tiles.remove(self.held_tile)
-                    
+
                     placed = True
 
                     break
@@ -204,21 +188,22 @@ class ScrabbleUI(arcade.View):
                         self.original_rack_positions[self.held_tile_index] = target_tile_pos
                         self.original_rack_positions[i] = held_tile_pos
 
-                        self.held_tile.sprite.center_x, self.held_tile.sprite.center_y = target_tile_pos
+                        (self.held_tile.sprite.center_x,
+                         self.held_tile.sprite.center_y) = target_tile_pos
                         rack_tile.sprite.center_x, rack_tile.sprite.center_y = held_tile_pos
-                        
+
                         self.held_tile.sprite.scale = 1.2
 
                         placed = True
                         break
 
-            
+
             # If the tile is not dragged to a valid spot on the board, reset it back to rack
             if not placed and self.held_tile_index is not None:
                 original_x, original_y = self.original_rack_positions[self.held_tile_index]
                 self.held_tile.sprite.center_x = original_x
                 self.held_tile.sprite.center_y = original_y
                 self.held_tile.sprite.scale = 1.2
-            
+
             self.held_tile = None
             self.held_tile_index = None

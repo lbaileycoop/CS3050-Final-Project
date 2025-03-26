@@ -1,6 +1,9 @@
-from .config import *
+""" Module containing utility functions for other modules """
+
 from typing import Tuple
 from itertools import permutations, combinations
+
+from .config import ROWS, COLS, DICTIONARY
 
 def to_coords(index: int) -> Tuple[int, int]:
     """Returns the x and y values of a tile based on the 1-d index"""

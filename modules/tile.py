@@ -1,5 +1,6 @@
-import arcade
-from .config import TILE_SIZE
+"""Module that contains the definition for a Tile object """
+
+from .config import arcade
 
 class Tile():
     """ 
@@ -9,14 +10,16 @@ class Tile():
         letter (str): The letter of the tile
         value (int): The score value of the tile
         image_path (str): The file path to the png of the graphic for the tile
+        scale (float): The scale of the tile
     """
-    def __init__(self, letter: str = '', value: int = 0, image_path="./assets/images/blank.png", scale: float = 0.63):
+    def __init__(self, letter: str = '', value: int = 0, 
+                 image_path="./assets/images/blank.png", scale: float = 0.63):
         """ Initializes a tile object """
         self.letter = letter
         self.value = value
         self.image_path = image_path
         self.scale = scale
-        
+
         # Create a sprite for rendering tile graphics
         self.sprite = arcade.Sprite(image_path)
         self.sprite.scale = self.scale
@@ -24,8 +27,9 @@ class Tile():
     def collides_with_point(self, point):
         """ Delegate collision detection to the sprite """
         return self.sprite.collides_with_point(point)
-    
+
     def set_scale(self, scale):
+        """ Setter function for scale """
         self.scale = scale
 
 # Dictionary to define and store all tiles
