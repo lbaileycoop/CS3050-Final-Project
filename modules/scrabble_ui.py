@@ -167,6 +167,8 @@ class ScrabbleUI(arcade.View):
 
                     self.board.update_tile(col, row, new_tile)
 
+                    print(self.board.find_new_words())
+
                     board_sprite.texture = arcade.load_texture(image_path)
 
                     self.player.rack.remove_tile(self.player.get_rack()[self.held_tile_index])

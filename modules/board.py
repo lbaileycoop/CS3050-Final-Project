@@ -10,6 +10,7 @@ TL = TILES['triple_letter']
 DL = TILES['double_letter']
 BA = TILES['base']
 ST = TILES['star']
+EMPTY_TILES = [TW, DW, TL, DL, BA, ST]
 
 ORIGINAL_BOARD = [
             [TW, BA, BA, DL, BA, BA, BA, TW, BA, BA, BA, DL, BA, BA, TW],
@@ -34,7 +35,9 @@ class Board():
     Class representing the Scrabble board
 
     Attributes:
-        Board (list(Tile)) : 2D list representing the board's current state
+        board (list(Tile)) : 2D list representing the board's current state
+        current_turn_tiles (list((Tile, (int, int)))) : list containing all tiles placed this turn,
+                                                        and the coords they were placed at
     """
     def __init__(self):
         """ Initialize a Board object """
@@ -50,6 +53,7 @@ class Board():
     def update_tile(self, x: int, y: int, tile: Tile):
         """ Function to update a tile in the board """
         self.board[y][x] = tile
+        self.current_turn_tiles.append((tile, (y, x)))
 
     def remove_tile(self, x: int, y: int):
         """ 
@@ -112,3 +116,36 @@ class Board():
     def get_tile_at(self, row, col):
         """ Returns the tile at the given coordinates """
         return self.board[row][col]
+
+    def find_new_words(self):
+        """ Returns a list of all words created by the placed tiles """
+
+        def search_dir(coords, dx, dy):
+            """ 
+            Searches the board in a specified direction, and 
+            adds all tiles to a list until an empty tile is found 
+            """
+
+            x = coords[0]
+            y = coords[1]
+            letters = []
+            tile = self.board[x][y]
+            while not tile in EMPTY_TILES:
+                letters.append(tile.letter)
+                x += dx
+                y += dy
+                tile = self.board[x][y]
+
+            return letters
+
+        words = []
+        for tile in self.current_turn_tiles:
+            x_word = list(reversed(search_dir(tile[1], -1, 0))) + search_dir(tile[1], 1, 0)[1:]
+            y_word = list(reversed(search_dir(tile[1], 0, -1))) + search_dir(tile[1], 0, 1)[1:]
+
+            if len(x_word) > 1 and x_word not in words:
+                words.append(x_word)
+            if len(y_word) > 1 and y_word not in words:
+                words.append(y_word)
+
+        return words
