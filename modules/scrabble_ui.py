@@ -112,18 +112,18 @@ class ScrabbleUI(arcade.View):
         for tile in self.rack_tiles:
             if tile.sprite in self.rack_sprites:
                 self.rack_sprites.remove(tile.sprite)
-        
+
         self.rack_tiles = []
         self.original_rack_positions = []
-        
+
         for i in range(self.player.rack.len_rack()):
             _tile = self.player.get_rack()[i]
             tile = Tile(_tile.letter, _tile.value, _tile.image_path, scale=1.2)
-            
+
             x, y = self.get_rack_position(i)
             tile.sprite.center_x = x
             tile.sprite.center_y = y
-            
+
             self.rack_sprites.append(tile.sprite)
             self.rack_tiles.append(tile)
             self.original_rack_positions.append((x, y))
@@ -133,7 +133,7 @@ class ScrabbleUI(arcade.View):
         # Swap tiles in the player's rack
         rack = self.player.get_rack()
         rack[index1], rack[index2] = rack[index2], rack[index1]
-        
+
         # Update visuals
         self.update_rack_display()
 
@@ -217,7 +217,7 @@ class ScrabbleUI(arcade.View):
 
                     new_tile = Tile(letter, value, image_path)
                     self.board.update_tile(col, row, new_tile)
-                    print(self.board.find_new_words())
+                    print(self.board.validate_turn())
                     board_sprite.texture = arcade.load_texture(image_path)
 
                     # Remove the tile from player's rack

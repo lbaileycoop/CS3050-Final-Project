@@ -11,6 +11,7 @@ DL = TILES['double_letter']
 BA = TILES['base']
 ST = TILES['star']
 EMPTY_TILES = [TW, DW, TL, DL, BA, ST]
+CENTER_COORDS = (7, 7)
 
 ORIGINAL_BOARD = [
             [TW, BA, BA, DL, BA, BA, BA, TW, BA, BA, BA, DL, BA, BA, TW],
@@ -42,6 +43,7 @@ class Board():
     def __init__(self):
         """ Initialize a Board object """
         self.current_turn_tiles = []
+        self.current_turn_coords = []
 
         # 2D list to store the current board state
         self.board = ORIGINAL_BOARD
@@ -53,7 +55,8 @@ class Board():
     def update_tile(self, x: int, y: int, tile: Tile):
         """ Function to update a tile in the board """
         self.board[y][x] = tile
-        self.current_turn_tiles.append((tile, (y, x)))
+        self.current_turn_tiles.append(tile)
+        self.current_turn_coords.append((y, x))
 
     def remove_tile(self, x: int, y: int):
         """ 
@@ -117,8 +120,40 @@ class Board():
         """ Returns the tile at the given coordinates """
         return self.board[row][col]
 
-    def find_new_words(self):
+    def validate_turn(self, is_first_turn=False):
         """ Returns a list of all words created by the placed tiles """
+
+        def find_center(coords, visited):
+            """ 
+            Searches the board using depth-first search to ensure that the tile 
+            at the given coordinates can eventually trace back to the center tile
+            """
+
+            if coords == CENTER_COORDS:
+                return True
+            if coords in visited:
+                return False
+
+            visited.append(coords)
+            found = False
+            x = coords[0]
+            y = coords[1]
+
+            if (-1 < x+1 < len(self.board) and -1 < y < len(self.board[0])
+                and self.get_tile_at(x+1, y) not in EMPTY_TILES):
+                found = found or find_center((coords[0]+1, coords[1]), visited)
+            if (-1 < x-1 < len(self.board) and -1 < y < len(self.board[0])
+                and self.get_tile_at(x-1, y) not in EMPTY_TILES):
+                found = found or find_center((coords[0]-1, coords[1]), visited)
+            if (-1 < x < len(self.board) and -1 < y+1 < len(self.board[0])
+                and self.get_tile_at(x, y+1) not in EMPTY_TILES):
+                found = found or find_center((coords[0], coords[1]+1), visited)
+            if (-1 < x < len(self.board) and -1 < y+1 < len(self.board[0])
+                and self.get_tile_at(x, y-1) not in EMPTY_TILES):
+                found = found or find_center((coords[0], coords[1]-1), visited)
+
+            return found
+
 
         def search_dir(coords, dx, dy):
             """ 
@@ -129,23 +164,48 @@ class Board():
             x = coords[0]
             y = coords[1]
             letters = []
-            tile = self.board[x][y]
+            tile = self.get_tile_at(x, y)
             while not tile in EMPTY_TILES:
                 letters.append(tile.letter)
                 x += dx
                 y += dy
-                tile = self.board[x][y]
+                if -1 < x < len(self.board)and -1 < y < len(self.board[0]):
+                    tile = self.get_tile_at(x, y)
+                else:
+                    break
 
             return letters
 
+        words_are_valid = True
+        connects_to_center = True
+        tiles_in_line = True
+
         words = []
-        for tile in self.current_turn_tiles:
-            x_word = list(reversed(search_dir(tile[1], -1, 0))) + search_dir(tile[1], 1, 0)[1:]
-            y_word = list(reversed(search_dir(tile[1], 0, -1))) + search_dir(tile[1], 0, 1)[1:]
+
+        for i, coords in enumerate(self.current_turn_coords):
+
+            connects_to_center = connects_to_center and find_center(coords, [])
+
+            if i > 1:
+                if not (coords[0] == self.current_turn_coords[i-1][0] or
+                        coords[1] == self.current_turn_coords[i-1][1]):
+                    tiles_in_line = False
+
+            x_word = ''.join(list(reversed(
+                search_dir(coords, -1, 0))) + search_dir(coords, 1, 0)[1:])
+            y_word = ''.join(list(reversed(
+                search_dir(coords, 0, -1))) + search_dir(coords, 0, 1)[1:])
 
             if len(x_word) > 1 and x_word not in words:
                 words.append(x_word)
             if len(y_word) > 1 and y_word not in words:
                 words.append(y_word)
 
-        return words
+        for word in words:
+            if not valid_word(word):
+                words_are_valid = False
+
+        if is_first_turn:
+            return (words, words_are_valid, connects_to_center,
+                    tiles_in_line, len(self.current_turn_tiles) > 1)
+        return words, words_are_valid, connects_to_center, tiles_in_line
