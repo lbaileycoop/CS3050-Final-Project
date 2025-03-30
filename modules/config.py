@@ -1,3 +1,5 @@
+""" Module containing several config values for various modules """
+
 import arcade
 
 WINDOW_WIDTH, WINDOW_HEIGHT = arcade.get_display_size()
@@ -12,5 +14,5 @@ DOCK_SIZE_Y = int(BOARD_SIZE)
 BORDER_X = (WINDOW_WIDTH - BOARD_SIZE) // 2
 BORDER_Y = (WINDOW_HEIGHT - BOARD_SIZE) // 2
 
-with open("./assets/dictionary.csv", "r") as file:
-    DICTIONARY = set([line.strip() for line in file])
+with open("./assets/dictionary.csv", "r", encoding='utf-8') as file:
+    DICTIONARY = {line.strip() for line in file}

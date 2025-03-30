@@ -1,8 +1,12 @@
+""" Module containing the main function for running the scrabble game """
+
 import arcade
-from modules import *
+from modules import ScrabbleUI, config
 
 def main():
-    window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
+    """ Method to run the scrabble game """
+
+    window = arcade.Window(config.WINDOW_WIDTH, config.WINDOW_HEIGHT, config.WINDOW_TITLE)
 
     scrabble = ScrabbleUI()
 

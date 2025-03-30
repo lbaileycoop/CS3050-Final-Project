@@ -1,3 +1,5 @@
+""" Module containing the definition for a Drawbag object """
+
 from random import shuffle
 from .tile import Tile, TILES
 
@@ -12,7 +14,7 @@ class Drawbag():
         """ Initializes a draw bag object """
         self.drawbag = []
         self.initialize_drawbag()
-    
+
     def add_tile(self, tile: Tile, quantity: int):
         """ Function to add a tile to the draw bag """
         for _ in range(quantity):
@@ -52,7 +54,7 @@ class Drawbag():
     def draw_tile(self):
         """ Function to simulate drawing a tile from the draw bag """
         return self.drawbag.pop()
-    
-    def remaining_tiles(self):
+
+    def get_remaining_tiles(self):
         """ Function to get the amount of tiles remaining in the draw bag """
         return len(self.drawbag)
