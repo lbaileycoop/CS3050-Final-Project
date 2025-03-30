@@ -17,13 +17,13 @@ class ScrabbleUI(arcade.View):
         super().__init__()
 
         # Position constants for dynamic graphics
-        self.BOARD_START_X = BORDER_X
-        self.BOARD_START_Y = BORDER_Y * 1.5
-        self.RACK_START_X = int(WINDOW_WIDTH / 3.25)
-        self.RACK_TILE_SPACING = TILE_SIZE * 2.5
-        self.BUTTON_X = WINDOW_WIDTH - BORDER_X * 0.6
-        self.BOARD_CENTER_X = 7 * (TILE_SIZE + TILE_GAP) + BORDER_X
-        self.BOARD_CENTER_Y = (ROWS - 8) * (TILE_SIZE + TILE_GAP) + BORDER_Y * 1.5
+        self.board_start_x = BORDER_X
+        self.board_start_y = BORDER_Y * 1.5
+        self.rack_start_x = int(WINDOW_WIDTH / 3.25)
+        self.rack_tile_spacing = TILE_SIZE * 2.5
+        self.button_x = WINDOW_WIDTH - BORDER_X * 0.6
+        self.board_center_x = 7 * (TILE_SIZE + TILE_GAP) + BORDER_X
+        self.board_center_y = (ROWS - 8) * (TILE_SIZE + TILE_GAP) + BORDER_Y * 1.5
 
         self.background_color = arcade.color.GRAY
 
@@ -66,22 +66,22 @@ class ScrabbleUI(arcade.View):
 
         # displays buttons
         self.button_sprites: arcade.SpriteList = arcade.SpriteList()
-        
+
         # Reset button
         self.reset_button = arcade.Sprite("./assets/images/reset_button.png")
-        self.reset_button.center_x = self.BUTTON_X
+        self.reset_button.center_x = self.button_x
         self.reset_button.center_y = BORDER_Y * 0.8
-        
+
         # Trade-in button
         self.trade_in_button = arcade.Sprite("./assets/images/trade_in_button.png")
-        self.trade_in_button.center_x = self.BUTTON_X
+        self.trade_in_button.center_x = self.button_x
         self.trade_in_button.center_y = BORDER_Y * 0.5
-        
+
         # Play word button
         self.play_word_button = arcade.Sprite("./assets/images/play_word_button.png")
-        self.play_word_button.center_x = self.BUTTON_X
+        self.play_word_button.center_x = self.button_x
         self.play_word_button.center_y = BORDER_Y * 1.1
-        
+
         self.button_sprites.append(self.trade_in_button)
         self.button_sprites.append(self.reset_button)
         self.button_sprites.append(self.play_word_button)
@@ -90,19 +90,19 @@ class ScrabbleUI(arcade.View):
         self.other_sprites: arcade.SpriteList = arcade.SpriteList()
         self.board_background = arcade.Sprite("./assets/images/background.png")
         self.board_background.size = (BOARD_SIZE * 1.15, BOARD_SIZE * 1.15)
-        self.board_background.center_x = self.BOARD_CENTER_X
-        self.board_background.center_y = self.BOARD_CENTER_Y
+        self.board_background.center_x = self.board_center_x
+        self.board_background.center_y = self.board_center_y
         self.other_sprites.append(self.board_background)
 
     def get_board_position(self, row, col):
         """ Calculate the screen position for a board tile at the given row and column."""
-        x = col * (TILE_SIZE + TILE_GAP) + self.BOARD_START_X
-        y = (ROWS - 1 - row) * (TILE_SIZE + TILE_GAP) + self.BOARD_START_Y
+        x = col * (TILE_SIZE + TILE_GAP) + self.board_start_x
+        y = (ROWS - 1 - row) * (TILE_SIZE + TILE_GAP) + self.board_start_y
         return x, y
 
     def get_rack_position(self, tile_index):
         """ Calculate the screen position for a rack tile at the given index. """
-        x = self.RACK_START_X + (self.RACK_TILE_SPACING * tile_index)
+        x = self.rack_start_x + (self.rack_tile_spacing * tile_index)
         y = self.rack_graphic.center_y
         return x, y
 
@@ -186,7 +186,7 @@ class ScrabbleUI(arcade.View):
                 self.held_tile = tile
                 self.held_tile_index = i
                 break
-                
+
         # Check if a button was clicked
         for button_sprite in self.button_sprites:
             if button_sprite.collides_with_point((x, y)):
@@ -222,7 +222,7 @@ class ScrabbleUI(arcade.View):
 
                     # Remove the tile from player's rack
                     self.player.rack.remove_tile(self.player.get_rack()[self.held_tile_index])
-                    
+
                     # Update the rack display
                     self.update_rack_display()
 
@@ -238,7 +238,8 @@ class ScrabbleUI(arcade.View):
                         break
 
             # If the tile is not dragged to a valid spot on the board, reset it back to rack
-            if not placed and self.held_tile_index is not None and self.held_tile_index < len(self.original_rack_positions):
+            if (not placed and self.held_tile_index is not None
+                and self.held_tile_index < len(self.original_rack_positions)):
                 original_x, original_y = self.original_rack_positions[self.held_tile_index]
                 self.held_tile.sprite.center_x = original_x
                 self.held_tile.sprite.center_y = original_y
