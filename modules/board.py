@@ -31,6 +31,15 @@ ORIGINAL_BOARD = [
             [TW, BA, BA, DL, BA, BA, BA, TW, BA, BA, BA, DL, BA, BA, TW],
         ]
 
+ALPHABET = ['a','b','c','d','e','f',
+            'g','h','i','j','k','l',
+            'm','n','o','p','q','r',
+            's','t','u','v','v','w',
+            'x','y','z']
+
+CROSS_CHECKS_DOWN = [[ALPHABET * len(ORIGINAL_BOARD)] * len(ORIGINAL_BOARD)]
+CROSS_CHECKS_ACROSS = [[ALPHABET * len(ORIGINAL_BOARD)] * len(ORIGINAL_BOARD)]
+
 class Board():
     """
     Class representing the Scrabble board
@@ -163,10 +172,10 @@ class Board():
 
             x = coords[0]
             y = coords[1]
-            letters = []
+            letters = ''
             tile = self.get_tile_at(x, y)
             while not tile in EMPTY_TILES:
-                letters.append(tile.letter)
+                letters += tile.letter
                 x += dx
                 y += dy
                 if -1 < x < len(self.board)and -1 < y < len(self.board[0]):
@@ -191,10 +200,8 @@ class Board():
                         coords[1] == self.current_turn_coords[i-1][1]):
                     tiles_in_line = False
 
-            x_word = ''.join(list(reversed(
-                search_dir(coords, -1, 0))) + search_dir(coords, 1, 0)[1:])
-            y_word = ''.join(list(reversed(
-                search_dir(coords, 0, -1))) + search_dir(coords, 0, 1)[1:])
+            x_word = search_dir(coords, -1, 0)[::-1] + search_dir(coords, 1, 0)[1:]
+            y_word = search_dir(coords, 0, -1)[::-1] + search_dir(coords, 0, 1)[1:]
 
             if len(x_word) > 1 and x_word not in words:
                 words.append(x_word)
@@ -208,4 +215,26 @@ class Board():
         if is_first_turn:
             return (words, words_are_valid, connects_to_center,
                     tiles_in_line, len(self.current_turn_tiles) > 1)
-        return words, words_are_valid, connects_to_center, tiles_in_line
+        return words, words_are_valid and connects_to_center and tiles_in_line
+
+    def update_cross_checks(self, across):
+        """ Updates the cross-check lists whenever a move is played """
+
+        # TODO: update cross checks at the end of each played word
+        for i, coords in enumerate(self.current_turn_coords):
+            if across:
+                CROSS_CHECKS_ACROSS[
+                    coords[0]-1, coords[1]] = {letter for letter in ALPHABET 
+                                               if valid_word(letter+self.search_dir(coords, 0, 1))}
+                CROSS_CHECKS_ACROSS[
+                    coords[0]+1, coords[1]] = {letter for letter in ALPHABET
+                                               if valid_word(self.search_dir(coords, 0, -1)[::-1]+letter)}
+            else:
+                CROSS_CHECKS_DOWN[
+                    coords[1]-1, coords[0]] = {letter for letter in ALPHABET
+                                               if valid_word(letter+self.search_dir(coords, 1, 0))}
+                CROSS_CHECKS_DOWN[
+                    coords[1]+1, coords[0]] = {letter for letter in ALPHABET
+                                               if valid_word(self.search_dir(coords, -1, 0)[::-1]+letter)}
+
+        

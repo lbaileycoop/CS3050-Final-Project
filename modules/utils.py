@@ -15,4 +15,4 @@ def from_coords(x: int, y: int) -> Tuple[int, int]:
 
 def valid_word(word):
     """ Retruns True if the word exists in the dictionary, false otherwise """
-    return word in DICTIONARY
+    return DICTIONARY.has_key(word)
