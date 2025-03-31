@@ -7,3 +7,4 @@ from .rack import Rack
 from .player import Player
 from .board import Board
 from .scrabble_ui import ScrabbleUI
+from .start_screen import StartScreen
