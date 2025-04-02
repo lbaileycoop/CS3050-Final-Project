@@ -3,7 +3,7 @@
 from typing import Tuple
 from itertools import permutations, combinations
 
-from .config import ROWS, COLS, DICTIONARY
+from .config import ROWS, COLS, DICTIONARY, ALPHABET
 from .tile import Tile
 
 def to_coords(index: int) -> Tuple[int, int]:
@@ -32,13 +32,11 @@ def get_possible_words(input_string: str = "", num_free_letters: int = 0):
     def get_permutations(s):
         return set(''.join(p) for p in permutations(s))
 
-    alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm' \
-                'n', 'o', 'p' 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
     words = set()
 
     free_letter_combinations = set()
     if num_free_letters > 0:
-        for free_letters in combinations(alphabet, num_free_letters):
+        for free_letters in combinations(ALPHABET, num_free_letters):
             free_letter_combinations.add(''.join(free_letters))
     else:
         free_letter_combinations.add("")

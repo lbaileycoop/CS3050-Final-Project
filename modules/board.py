@@ -2,7 +2,6 @@
 
 from .tile import Tile, TILES
 from .utils import valid_word, tiles_to_str
-from typing import Tuple
 
 
 TW = TILES['triple_word']
@@ -50,24 +49,28 @@ class Board():
         # 2D list to store the current board state
         self.board: list[list[Tile]] = ORIGINAL_BOARD
 
+
     def get_board(self):
         """ Getter function for the current Board """
         return self.board
-    
+
+
     def set_board(self, new_board):
         """ Setter function for the board """
         self.board = [[None for _ in range(15)] for _ in range(15)]
         for row in range(15):
             for col in range(15):
                 self.board[row][col] = new_board[row][col]
-    
+
         self.clear_current_turn_tiles()
+
 
     def update_tile(self, row: int, col: int, tile: Tile):
         """ Function to update a tile in the board """
         self.board[row][col] = tile
         tile.coords = (row, col)
         self.current_turn_tiles.append(tile)
+
 
     def remove_tile(self, row: int, col: int):
         """ 
@@ -87,19 +90,22 @@ class Board():
 
         return self.board[row][col]
 
+
     def get_current_turn_tiles(self):
         """ Getter function for the list of tiles placed this turn """
         return self.current_turn_tiles
+
 
     def clear_current_turn_tiles(self):
         """ Clears the tiles placed this turn """
         self.current_turn_tiles = []
 
-    def validate_turn(self):
+
+    def score_turn(self):
         """ Validate turn and calculate its score 
         
         output:
-            word (str): The word that were formed during the turn # Should be changed to a list of strings for when multiple words are created in a single turn
+            words (list(str)): The words that were formed during the turn 
             is_valid (bool): True/False whether the turn is valid or not
             score (int): The score total for this turn
         """
@@ -115,13 +121,14 @@ class Board():
         # Doesn't all have to be done in this one function
 
         word = ""
-        for row, col, tile in placed_tiles:
-
         if not self.current_turn_tiles:
             return False, 0
-            
+
         total_score = 0
-        for tile, (row, col) in self.current_turn_tiles:
+        for tile in self.current_turn_tiles:
+            row = tile.coords[0]
+            col = tile.coords[1]
+
             letter_score = tile.value
             word += tile.letter
             letter_multiplier = 1
@@ -129,28 +136,30 @@ class Board():
             # Check for letter multipliers
             special_tile = ORIGINAL_BOARD[row][col]
             word_multiplier = 1
-            
+
             special_tile = ORIGINAL_BOARD[row][col]
             if special_tile == DL:
                 letter_multiplier = 2
             elif special_tile == TL:
                 letter_multiplier = 3
-            elif special_tile == DW or special_tile == ST:
+            elif special_tile in (DW, ST):
                 word_multiplier = 2
             elif special_tile == TW:
                 word_multiplier = 3
-            
+
             tile_score = letter_score * letter_multiplier * word_multiplier
             total_score += tile_score
-        
+
         self.clear_current_turn_tiles()
         self.first_turn = False
-            
+
         return word, True, total_score
+
 
     def get_tile_at(self, row: int, col: int):
         """ Returns the tile at the given coordinates """
         return self.board[row][col]
+
 
     def validate_turn(self) -> bool:
         """ Returns true if the played tiles makes a valid turn, otherwise False """
@@ -196,9 +205,9 @@ class Board():
             connects_to_center = connects_to_center and find_center(tile.coords, [])
 
             if i > 0:
-                tiles_in_line = tiles_in_line and (coords[0] == self.current_turn_tiles[i-1].coords[0] or
-                                                   coords[1] == self.current_turn_tiles[i-1].coords[1])
-
+                tiles_in_line = (tiles_in_line and
+                                 (coords[0] == self.current_turn_tiles[i-1].coords[0] or
+                                  coords[1] == self.current_turn_tiles[i-1].coords[1]))
 
         words = self.find_words()
         if len(words) == 0:
@@ -208,44 +217,45 @@ class Board():
             words_are_valid = words_are_valid and valid_word(tiles_to_str(word))
 
         return (words_are_valid and
-                connects_to_center and 
+                connects_to_center and
                 tiles_in_line)
-    
+
+
     def find_words(self) -> list[list[Tile]]:
+        """ Finds all words created by the current turn """
         words = []
         for tile in self.current_turn_tiles:
             coords = tile.coords
 
-            down_word = (self.find_string(coords, -1, 0)[::-1] + 
+            down_word = (self.find_string(coords, -1, 0)[::-1] +
                          self.find_string(coords, 1, 0)[1:])
-            across_word = (self.find_string(coords, 0, -1)[::-1] + 
+            across_word = (self.find_string(coords, 0, -1)[::-1] +
                            self.find_string(coords, 0, 1)[1:])
 
             if len(down_word) > 1 and down_word not in words:
                 words.append(down_word)
             if len(across_word) > 1 and across_word not in words:
                 words.append(across_word)
-        
+
         return words
 
     def find_string(self, coords: tuple[int, int], drow: int, dcol: int):
-            """ 
-            Searches the board in a specified direction, and 
-            adds all tiles to a list until an empty tile is found 
-            """
+        """ 
+        Searches the board in a specified direction, and 
+        adds all tiles to a list until an empty tile is found 
+        """
 
-            row = coords[0]
-            col = coords[1]
-            letters = []
-            tile = self.get_tile_at(row, col)
-            while not tile in EMPTY_TILES:
-                letters.append(tile)
-                row += drow
-                col += dcol
-                if -1 < row < len(self.board) and -1 < col < len(self.board[0]):
-                    tile = self.get_tile_at(row, col)
-                else:
-                    break
+        row = coords[0]
+        col = coords[1]
+        letters = []
+        tile = self.get_tile_at(row, col)
+        while not tile in EMPTY_TILES:
+            letters.append(tile)
+            row += drow
+            col += dcol
+            if -1 < row < len(self.board) and -1 < col < len(self.board[0]):
+                tile = self.get_tile_at(row, col)
+            else:
+                break
 
-            return letters
-
+        return letters

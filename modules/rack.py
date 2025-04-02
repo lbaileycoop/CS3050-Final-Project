@@ -26,7 +26,7 @@ class Rack():
     def get_rack(self):
         """ Getter function for the rack list """
         return self.rack
-    
+
     def set_rack(self, new_rack):
         """ Setter function for the rack """
         self.rack = new_rack
@@ -43,16 +43,18 @@ class Rack():
     def len_rack(self):
         """ Function to get the amount of tiles in the current rack """
         return len(self.rack)
-    
+
     def get_rack_letters(self):
+        """ Returns a list of letters in the rack """
         letters: list[str] = []
 
         for tile in self.rack:
             letters.append(tile.letter)
 
         return letters
-    
+
     def remove_letter(self, letter: str):
+        """ Removes a tile from the rack by letter """
         for tile in self.rack:
             if tile.letter == letter:
                 self.remove_tile(tile)

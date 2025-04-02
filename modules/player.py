@@ -24,7 +24,7 @@ class Player():
     def get_rack(self):
         """ Getter function for the player's current rack """
         return self.rack.get_rack()
-    
+
     def set_rack(self, new_rack):
         """ Setter function for the player's rack """
         self.rack.set_rack(new_rack)
