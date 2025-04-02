@@ -1,16 +1,15 @@
 """ Module containing the main function for running the scrabble game """
 
 import arcade
-from modules import ScrabbleUI, config
+from modules import StartScreen, config
 
 def main():
     """ Method to run the scrabble game """
-
     window = arcade.Window(config.WINDOW_WIDTH, config.WINDOW_HEIGHT, config.WINDOW_TITLE)
 
-    scrabble = ScrabbleUI()
+    start_screen = StartScreen()  # Start with the start screen
 
-    window.show_view(scrabble)
+    window.show_view(start_screen)
 
     arcade.run()
 

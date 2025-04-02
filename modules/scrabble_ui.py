@@ -442,9 +442,8 @@ class ScrabbleUI(arcade.View):
                     image_path = self.held_tile.image_path
 
                     new_tile = Tile(letter, value, image_path)
-                    self.board.update_tile(col, row, new_tile)
+                    self.board.update_tile(row, col, new_tile)
 
-                    #print(self.board.find_new_words())
                     board_sprite.texture = arcade.load_texture(image_path)
 
                     # Remove the tile from player's rack

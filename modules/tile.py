@@ -11,17 +11,19 @@ class Tile():
         value (int): The score value of the tile
         image_path (str): The file path to the png of the graphic for the tile
         scale (float): The scale of the tile
+        coords ((int, int)): The coordinates of the tile (None if tile is not placed on the board)
     """
     def __init__(self, letter: str = '', value: int = 0,
                  image_path="./assets/images/blank.png", scale: float = 0.63):
         """ Initializes a tile object """
-        self.letter = letter
-        self.value = value
-        self.image_path = image_path
-        self.scale = scale
+        self.letter: str = letter
+        self.value: int = value
+        self.image_path: str = image_path
+        self.scale: float = scale
+        self.coords: tuple[int, int] = None
 
         # Create a sprite for rendering tile graphics
-        self.sprite = arcade.Sprite(image_path)
+        self.sprite: arcade.Sprite = arcade.Sprite(image_path)
         self.sprite.scale = self.scale
 
     def collides_with_point(self, point):
