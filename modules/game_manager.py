@@ -3,7 +3,6 @@
 import random
 from .board import Board
 from .drawbag import Drawbag
-# from .player import Player
 
 class GameManager:
     """
@@ -30,13 +29,7 @@ class GameManager:
 
     def next_turn(self):
         """ Switches the turn to the next player in rotation """
-        self.turn += 1
-        if self.turn >= len(self.player_list):
-            self.turn = 0
-
-    def play(self, turn: int, move: dict):
-        """TODO"""
-        #TODO: Implement
+        self.turn = (self.turn + 1) % len(self.player_list)
 
     def get_current_turn(self):
         """ Getter function for the current turn as an integer """

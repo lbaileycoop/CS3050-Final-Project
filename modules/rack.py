@@ -26,6 +26,10 @@ class Rack():
     def get_rack(self):
         """ Getter function for the rack list """
         return self.rack
+    
+    def set_rack(self, new_rack):
+        """ Setter function for the rack """
+        self.rack = new_rack
 
     def remove_tile(self, tile: Tile):
         """ Removes a specified tile from the rack """
