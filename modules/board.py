@@ -31,15 +31,6 @@ ORIGINAL_BOARD = [
             [TW, BA, BA, DL, BA, BA, BA, TW, BA, BA, BA, DL, BA, BA, TW],
         ]
 
-ALPHABET = {'a','b','c','d','e','f',
-            'g','h','i','j','k','l',
-            'm','n','o','p','q','r',
-            's','t','u','v','v','w',
-            'x','y','z'}
-
-CROSS_CHECKS_DOWN = [[ALPHABET for _ in range(len(ORIGINAL_BOARD))] for _ in range(len(ORIGINAL_BOARD))]
-CROSS_CHECKS_ACROSS = [[ALPHABET for _ in range(len(ORIGINAL_BOARD))] for _ in range(len(ORIGINAL_BOARD))]
-
 class Board():
     """
     Class representing the Scrabble board
@@ -203,7 +194,6 @@ class Board():
         
         return words
 
-
     def find_string(self, coords: tuple[int, int], drow: int, dcol: int):
             """ 
             Searches the board in a specified direction, and 
@@ -225,61 +215,3 @@ class Board():
 
             return letters
 
-    def update_cross_checks(self):
-        """ Updates the cross-check lists whenever a move is played """
-        words = self.find_words()
-
-        for tile in self.current_turn_tiles:
-            coords = tile.coords
-
-            if self.current_turn_tiles[0].coords[0] - self.current_turn_tiles[-1].coords[0] == 0:
-                across = True
-            else:
-                across = False
-
-            if across:
-                CROSS_CHECKS_ACROSS[coords[0]][coords[1]] = []
-                
-                if coords[0]-1 > -1:
-                    CROSS_CHECKS_ACROSS[
-                        coords[0]-1][coords[1]] = {letter for letter in ALPHABET 
-                                                if valid_word(letter+
-                                                                tiles_to_str(self.find_string(coords, 1, 0))[0])}
-                if coords[0]+1 < len(self.board):
-                    CROSS_CHECKS_ACROSS[
-                        coords[0]+1][coords[1]] = {letter for letter in ALPHABET
-                                                if valid_word(tiles_to_str(self.find_string(coords, -1, 0))[::-1]+
-                                                                letter)}
-            
-            if not across or len(self.current_turn_tiles) == 1:
-                CROSS_CHECKS_DOWN[coords[0]][coords[1]] = []
-                
-                if coords[1]-1 > -1:
-                    CROSS_CHECKS_DOWN[
-                        coords[0]][coords[1]-1] = {letter for letter in ALPHABET
-                                                if valid_word(letter+
-                                                                tiles_to_str(self.find_string(coords, 0, 1)))}
-                if coords[1]+1 < len(self.board[0]):
-                    CROSS_CHECKS_DOWN[
-                        coords[0]][coords[1]+1] = {letter for letter in ALPHABET
-                                                if valid_word(tiles_to_str(self.find_string(coords, 0, -1))[::-1]+
-                                                                letter)}
-
-        for word in words:
-            if word[1].coords[0] - word[0].coords[0] == 0:
-                across = True
-                row = word[1].coords[0]
-            else:
-                across = False
-                col = word[1].coords[1]
-
-            if across:
-                if word[0].coords[1]-1 > -1:
-                    CROSS_CHECKS_ACROSS[row][word[0].coords[1]-1] = []
-                if word[-1].coords[1]+1 < len(self.board[0]):
-                    CROSS_CHECKS_ACROSS[row][word[-1].coords[1]+1] = []
-            else:
-                if word[0].coords[0]-1 > -1:
-                    CROSS_CHECKS_DOWN[word[0].coords[0]-1][col] = []
-                if word[-1].coords[0]+1 < len(self.board):
-                    CROSS_CHECKS_DOWN[word[-1].coords[0]+1][col] = []

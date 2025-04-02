@@ -12,7 +12,7 @@ class Rack():
     """
     def __init__(self, drawbag: Drawbag):
         """ Initializes a rack object for the start of the game """
-        self.rack = []
+        self.rack: list[Tile] = []
         self.initialize_rack(drawbag)
 
     def add_tile(self, tile: Tile):
@@ -39,3 +39,17 @@ class Rack():
     def len_rack(self):
         """ Function to get the amount of tiles in the current rack """
         return len(self.rack)
+    
+    def get_rack_letters(self):
+        letters: list[str] = []
+
+        for tile in self.rack:
+            letters.append(tile.letter)
+
+        return letters
+    
+    def remove_letter(self, letter: str):
+        for tile in self.rack:
+            if tile.letter == letter:
+                self.remove_tile(tile)
+                break
