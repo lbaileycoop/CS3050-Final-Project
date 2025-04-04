@@ -1,4 +1,4 @@
-""" Module to facilitate imports for other modules """
+"""Module to facilitate imports for other modules"""
 
 from .config import *
 from .tile import Tile, TILES

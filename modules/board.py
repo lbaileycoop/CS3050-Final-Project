@@ -1,37 +1,38 @@
-""" Module containing the definition for a Board object """
+"""Module containing the definition for a Board object"""
 
 from .tile import Tile, TILES
 from .utils import valid_word, tiles_to_str
 
 
-TW = TILES['triple_word']
-DW = TILES['double_word']
-TL = TILES['triple_letter']
-DL = TILES['double_letter']
-BA = TILES['base']
-ST = TILES['star']
+TW = TILES["triple_word"]
+DW = TILES["double_word"]
+TL = TILES["triple_letter"]
+DL = TILES["double_letter"]
+BA = TILES["base"]
+ST = TILES["star"]
 EMPTY_TILES = [TW, DW, TL, DL, BA, ST]
 CENTER_COORDS = (7, 7)
 
 ORIGINAL_BOARD = [
-            [TW, BA, BA, DL, BA, BA, BA, TW, BA, BA, BA, DL, BA, BA, TW],
-            [BA, DW, BA, BA, BA, TL, BA, BA, BA, TL, BA, BA, BA, DW, BA],
-            [BA, BA, DW, BA, BA, BA, DL, BA, DL, BA, BA, BA, DW, BA, BA],
-            [DL, BA, BA, DW, BA, BA, BA, DL, BA, BA, BA, DW, BA, BA, DL],
-            [BA, BA, BA, BA, DW, BA, BA, BA, BA, BA, DW, BA, BA, BA, BA],
-            [BA, TL, BA, BA, BA, TL, BA, BA, BA, TL, BA, BA, BA, TL, BA],
-            [BA, BA, DL, BA, BA, BA, DL, BA, DL, BA, BA, BA, DL, BA, BA],
-            [TW, BA, BA, DL, BA, BA, BA, ST, BA, BA, BA, DL, BA, BA, TW],
-            [BA, BA, DL, BA, BA, BA, DL, BA, DL, BA, BA, BA, DL, BA, BA],
-            [BA, TL, BA, BA, BA, TL, BA, BA, BA, TL, BA, BA, BA, TL, BA],
-            [BA, BA, BA, BA, DW, BA, BA, BA, BA, BA, DW, BA, BA, BA, BA],
-            [DL, BA, BA, DW, BA, BA, BA, DL, BA, BA, BA, DW, BA, BA, DL],
-            [BA, BA, DW, BA, BA, BA, DL, BA, DL, BA, BA, BA, DW, BA, BA],
-            [BA, DW, BA, BA, BA, TL, BA, BA, BA, TL, BA, BA, BA, DW, BA],
-            [TW, BA, BA, DL, BA, BA, BA, TW, BA, BA, BA, DL, BA, BA, TW],
-        ]
+    [TW, BA, BA, DL, BA, BA, BA, TW, BA, BA, BA, DL, BA, BA, TW],
+    [BA, DW, BA, BA, BA, TL, BA, BA, BA, TL, BA, BA, BA, DW, BA],
+    [BA, BA, DW, BA, BA, BA, DL, BA, DL, BA, BA, BA, DW, BA, BA],
+    [DL, BA, BA, DW, BA, BA, BA, DL, BA, BA, BA, DW, BA, BA, DL],
+    [BA, BA, BA, BA, DW, BA, BA, BA, BA, BA, DW, BA, BA, BA, BA],
+    [BA, TL, BA, BA, BA, TL, BA, BA, BA, TL, BA, BA, BA, TL, BA],
+    [BA, BA, DL, BA, BA, BA, DL, BA, DL, BA, BA, BA, DL, BA, BA],
+    [TW, BA, BA, DL, BA, BA, BA, ST, BA, BA, BA, DL, BA, BA, TW],
+    [BA, BA, DL, BA, BA, BA, DL, BA, DL, BA, BA, BA, DL, BA, BA],
+    [BA, TL, BA, BA, BA, TL, BA, BA, BA, TL, BA, BA, BA, TL, BA],
+    [BA, BA, BA, BA, DW, BA, BA, BA, BA, BA, DW, BA, BA, BA, BA],
+    [DL, BA, BA, DW, BA, BA, BA, DL, BA, BA, BA, DW, BA, BA, DL],
+    [BA, BA, DW, BA, BA, BA, DL, BA, DL, BA, BA, BA, DW, BA, BA],
+    [BA, DW, BA, BA, BA, TL, BA, BA, BA, TL, BA, BA, BA, DW, BA],
+    [TW, BA, BA, DL, BA, BA, BA, TW, BA, BA, BA, DL, BA, BA, TW],
+]
 
-class Board():
+
+class Board:
     """
     Class representing the Scrabble board
 
@@ -41,8 +42,9 @@ class Board():
                                                         and the coords they were placed at
         first_turn (bool) : tracks if this is the first turn of the game
     """
+
     def __init__(self):
-        """ Initialize a Board object """
+        """Initialize a Board object"""
         self.current_turn_tiles: list[Tile] = []
         self.first_turn = True
 
@@ -65,14 +67,12 @@ class Board():
             [TW, BA, BA, DL, BA, BA, BA, TW, BA, BA, BA, DL, BA, BA, TW],
         ]
 
-
     def get_board(self):
-        """ Getter function for the current Board """
+        """Getter function for the current Board"""
         return self.board
 
-
     def set_board(self, new_board):
-        """ Setter function for the board """
+        """Setter function for the board"""
         self.board = [[None for _ in range(15)] for _ in range(15)]
         for row in range(15):
             for col in range(15):
@@ -80,18 +80,16 @@ class Board():
 
         self.clear_current_turn_tiles()
 
-
     def update_tile(self, row: int, col: int, tile: Tile):
-        """ Function to update a tile in the board """
+        """Function to update a tile in the board"""
         self.board[row][col] = tile
         tile.coords = (row, col)
         self.current_turn_tiles.append(tile)
 
-
     def remove_tile(self, row: int, col: int):
-        """ 
+        """
         Function to remove tiles from the board
-            
+
         Only used on player's turn to allow changing of tiles
         """
         self.board[row][col] = ORIGINAL_BOARD[row][col]
@@ -106,22 +104,20 @@ class Board():
 
         return self.board[row][col]
 
-
     def get_current_turn_tiles(self):
-        """ Getter function for the list of tiles placed this turn """
+        """Getter function for the list of tiles placed this turn"""
         return self.current_turn_tiles
 
-
     def clear_current_turn_tiles(self):
-        """ Clears the tiles placed this turn """
+        """Clears the tiles placed this turn"""
         self.current_turn_tiles = []
 
-
     def score_turn(self):
-        """ Validate turn and calculate its score 
-        
+        """
+        Validate turn and calculate its score
+
         output:
-            words (list(str)): The words that were formed during the turn 
+            words (list(str)): The words that were formed during the turn
             is_valid (bool): True/False whether the turn is valid or not
             score (int): The score total for this turn
         """
@@ -171,18 +167,16 @@ class Board():
 
         return word, True, total_score
 
-
     def get_tile_at(self, row: int, col: int):
-        """ Returns the tile at the given coordinates """
+        """Returns the tile at the given coordinates"""
         return self.board[row][col]
 
-
     def validate_turn(self) -> bool:
-        """ Returns true if the played tiles makes a valid turn, otherwise False """
+        """Returns true if the played tiles makes a valid turn, otherwise False"""
 
         def find_center(coords: tuple[int, int], visited: list[tuple[int, int]]):
-            """ 
-            Searches the board using depth-first search to ensure that the tile 
+            """
+            Searches the board using depth-first search to ensure that the tile
             at the given coordinates can eventually trace back to the center tile
             """
 
@@ -196,18 +190,30 @@ class Board():
             row = coords[0]
             col = coords[1]
 
-            if (-1 < row+1 < len(self.board) and -1 < col < len(self.board[0])
-                and self.get_tile_at(row+1, col) not in EMPTY_TILES):
-                found = found or find_center((coords[0]+1, coords[1]), visited)
-            if (-1 < row-1 < len(self.board) and -1 < col < len(self.board[0])
-                and self.get_tile_at(row-1, col) not in EMPTY_TILES):
-                found = found or find_center((coords[0]-1, coords[1]), visited)
-            if (-1 < row < len(self.board) and -1 < col+1 < len(self.board[0])
-                and self.get_tile_at(row, col+1) not in EMPTY_TILES):
-                found = found or find_center((coords[0], coords[1]+1), visited)
-            if (-1 < row < len(self.board) and -1 < col+1 < len(self.board[0])
-                and self.get_tile_at(row, col-1) not in EMPTY_TILES):
-                found = found or find_center((coords[0], coords[1]-1), visited)
+            if (
+                -1 < row + 1 < len(self.board)
+                and -1 < col < len(self.board[0])
+                and self.get_tile_at(row + 1, col) not in EMPTY_TILES
+            ):
+                found = found or find_center((coords[0] + 1, coords[1]), visited)
+            if (
+                -1 < row - 1 < len(self.board)
+                and -1 < col < len(self.board[0])
+                and self.get_tile_at(row - 1, col) not in EMPTY_TILES
+            ):
+                found = found or find_center((coords[0] - 1, coords[1]), visited)
+            if (
+                -1 < row < len(self.board)
+                and -1 < col + 1 < len(self.board[0])
+                and self.get_tile_at(row, col + 1) not in EMPTY_TILES
+            ):
+                found = found or find_center((coords[0], coords[1] + 1), visited)
+            if (
+                -1 < row < len(self.board)
+                and -1 < col + 1 < len(self.board[0])
+                and self.get_tile_at(row, col - 1) not in EMPTY_TILES
+            ):
+                found = found or find_center((coords[0], coords[1] - 1), visited)
 
             return found
 
@@ -221,9 +227,10 @@ class Board():
             connects_to_center = connects_to_center and find_center(tile.coords, [])
 
             if i > 0:
-                tiles_in_line = (tiles_in_line and
-                                 (coords[0] == self.current_turn_tiles[i-1].coords[0] or
-                                  coords[1] == self.current_turn_tiles[i-1].coords[1]))
+                tiles_in_line = tiles_in_line and (
+                    coords[0] == self.current_turn_tiles[i - 1].coords[0]
+                    or coords[1] == self.current_turn_tiles[i - 1].coords[1]
+                )
 
         words = self.find_words()
         if len(words) == 0:
@@ -232,21 +239,22 @@ class Board():
         for word in words:
             words_are_valid = words_are_valid and valid_word(tiles_to_str(word))
 
-        return (words_are_valid and
-                connects_to_center and
-                tiles_in_line)
-
+        return words_are_valid and connects_to_center and tiles_in_line
 
     def find_words(self) -> list[list[Tile]]:
-        """ Finds all words created by the current turn """
+        """Finds all words created by the current turn"""
         words = []
         for tile in self.current_turn_tiles:
             coords = tile.coords
 
-            down_word = (self.find_string(coords, -1, 0)[::-1] +
-                         self.find_string(coords, 1, 0)[1:])
-            across_word = (self.find_string(coords, 0, -1)[::-1] +
-                           self.find_string(coords, 0, 1)[1:])
+            down_word = (
+                self.find_string(coords, -1, 0)[::-1]
+                + self.find_string(coords, 1, 0)[1:]
+            )
+            across_word = (
+                self.find_string(coords, 0, -1)[::-1]
+                + self.find_string(coords, 0, 1)[1:]
+            )
 
             if len(down_word) > 1 and down_word not in words:
                 words.append(down_word)
@@ -256,9 +264,9 @@ class Board():
         return words
 
     def find_string(self, coords: tuple[int, int], drow: int, dcol: int):
-        """ 
-        Searches the board in a specified direction, and 
-        adds all tiles to a list until an empty tile is found 
+        """
+        Searches the board in a specified direction, and
+        adds all tiles to a list until an empty tile is found
         """
 
         row = coords[0]
