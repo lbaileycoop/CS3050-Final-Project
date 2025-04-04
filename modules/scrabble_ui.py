@@ -403,6 +403,7 @@ class ScrabbleUI(arcade.View):
         """ Reset the current turn """
         self.board.set_board(self.saved_board_state)
         self.player.set_rack(self.saved_rack_state)
+        self.board.clear_current_turn_tiles()
         self.update_board_display()
         self.update_rack_display()
 
