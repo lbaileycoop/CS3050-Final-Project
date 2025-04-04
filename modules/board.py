@@ -86,92 +86,85 @@ class Board:
         tile.coords = (row, col)
         self.current_turn_tiles.append(tile)
 
-    def remove_tile(self, row: int, col: int):
-        """
-        Function to remove tiles from the board
+    def remove_current_tile(self, tile: Tile):
+        """Removes a given tile from the board and from current turn tiles"""
+        row = tile.coords[0]
+        col = tile.coords[1]
 
-        Only used on player's turn to allow changing of tiles
-        """
         self.board[row][col] = ORIGINAL_BOARD[row][col]
-        to_remove = None
-        for placed_tile in self.current_turn_tiles:
-            if placed_tile[0] == col and placed_tile[1] == row:
-                to_remove = placed_tile
-                break
+        self.current_turn_tiles.remove(tile)
 
-        if to_remove:
-            self.current_turn_tiles.remove(to_remove)
-
-        return self.board[row][col]
+    def clear_current_turn_tiles(self):
+        """Clears the tiles placed this turn"""
+        while len(self.current_turn_tiles) > 0:
+            self.remove_current_tile(self.current_turn_tiles[0])
 
     def get_current_turn_tiles(self):
         """Getter function for the list of tiles placed this turn"""
         return self.current_turn_tiles
 
-    def clear_current_turn_tiles(self):
-        """Clears the tiles placed this turn"""
+    def reset_current_turn_tiles(self):
+        """Sets current_turn_tiles back to an empty list for a new turn"""
         self.current_turn_tiles = []
 
-    def score_turn(self):
-        """
-        Validate turn and calculate its score
+    def play_turn(self) -> tuple[bool, dict[str, int]]:
+        """Performs the logic for attempting to play a turn"""
+        words: list[list[Tile]] = self.find_words()
 
-        output:
-            words (list(str)): The words that were formed during the turn
-            is_valid (bool): True/False whether the turn is valid or not
-            score (int): The score total for this turn
-        """
-        # TODO
-        # currently just placeholders here, the function needs to be completely implemented
-        # Needs to validate word by:
-        # 1. Ensuring words are placed in a straight line
-        # 2. Ensuring words are connected to other played words (except for first turn)
-        # 3. Getting ALL words created, in the case that 2 or more are created in a single turn
-        # 4. Validating all words against the dictionary
-        # 5. Properly calculating score (the current implementation does not work)
-        # 6. Dealing with blank tiles
-        # Doesn't all have to be done in this one function
+        legal_turn: bool = self.validate_turn(words)
+        words_dict: dict[str, int] = {}
 
-        word = ""
-        if not self.current_turn_tiles:
-            return False, 0
+        if legal_turn:
+            words_dict = self.score_words(words)
+            self.reset_current_turn_tiles()
+        else:
+            self.clear_current_turn_tiles()
 
-        total_score = 0
-        for tile in self.current_turn_tiles:
+        return legal_turn, words_dict
+
+    def score_words(self, words: list[list[Tile]]) -> dict[str, int]:
+        """Returns a dict matching every word in words to its score"""
+        words_dict = {}
+
+        for word in words:
+            words_dict[tiles_to_str(word)] = self.score_word(word)
+
+        return words_dict
+
+    def score_word(self, word: list[Tile]):
+        """Returns the score for a played word"""
+        word_score = 0
+        word_multiplier = 1
+
+        for tile in word:
             row = tile.coords[0]
             col = tile.coords[1]
 
-            letter_score = tile.value
-            word += tile.letter
             letter_multiplier = 1
 
+            letter_score = tile.value
+
             # Check for letter multipliers
-            special_tile = ORIGINAL_BOARD[row][col]
-            word_multiplier = 1
+            board_location = ORIGINAL_BOARD[row][col]
 
-            special_tile = ORIGINAL_BOARD[row][col]
-            if special_tile == DL:
-                letter_multiplier = 2
-            elif special_tile == TL:
-                letter_multiplier = 3
-            elif special_tile in (DW, ST):
-                word_multiplier = 2
-            elif special_tile == TW:
-                word_multiplier = 3
+            if board_location == DL:
+                letter_multiplier *= 2
+            elif board_location == TL:
+                letter_multiplier *= 3
+            elif board_location in (DW, ST):
+                word_multiplier *= 2
+            elif board_location == TW:
+                word_multiplier *= 3
 
-            tile_score = letter_score * letter_multiplier * word_multiplier
-            total_score += tile_score
+            word_score += letter_score * letter_multiplier
 
-        self.clear_current_turn_tiles()
-        self.first_turn = False
-
-        return word, True, total_score
+        return word_score * word_multiplier
 
     def get_tile_at(self, row: int, col: int):
         """Returns the tile at the given coordinates"""
         return self.board[row][col]
 
-    def validate_turn(self) -> bool:
+    def validate_turn(self, words) -> bool:
         """Returns true if the played tiles makes a valid turn, otherwise False"""
 
         def find_center(coords: tuple[int, int], visited: list[tuple[int, int]]):
@@ -232,7 +225,6 @@ class Board:
                     or coords[1] == self.current_turn_tiles[i - 1].coords[1]
                 )
 
-        words = self.find_words()
         if len(words) == 0:
             words_are_valid = False
 
