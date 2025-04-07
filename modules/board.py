@@ -38,15 +38,12 @@ class Board:
 
     Attributes:
         board (list(list(Tile))) : 2D list representing the board's current state
-        current_turn_tiles (list((Tile, (int, int)))) : list containing all tiles placed this turn,
-                                                        and the coords they were placed at
-        first_turn (bool) : tracks if this is the first turn of the game
+        current_turn_tiles (list(Tile)) : list containing all tiles placed this turn
     """
 
     def __init__(self):
         """Initialize a Board object"""
         self.current_turn_tiles: list[Tile] = []
-        self.first_turn = True
 
         # 2D list to store the current board state
         self.board: list[list[Tile]] = [
@@ -67,11 +64,11 @@ class Board:
             [TW, BA, BA, DL, BA, BA, BA, TW, BA, BA, BA, DL, BA, BA, TW],
         ]
 
-    def get_board(self):
+    def get_board(self) -> list[list[Tile]]:
         """Getter function for the current Board"""
         return self.board
 
-    def set_board(self, new_board):
+    def set_board(self, new_board: list[list[Tile]]):
         """Setter function for the board"""
         self.board = [[None for _ in range(15)] for _ in range(15)]
         for row in range(15):
@@ -99,7 +96,7 @@ class Board:
         while len(self.current_turn_tiles) > 0:
             self.remove_current_tile(self.current_turn_tiles[0])
 
-    def get_current_turn_tiles(self):
+    def get_current_turn_tiles(self) -> list[Tile]:
         """Getter function for the list of tiles placed this turn"""
         return self.current_turn_tiles
 
@@ -109,10 +106,10 @@ class Board:
 
     def play_turn(self) -> tuple[bool, dict[str, int]]:
         """Performs the logic for attempting to play a turn"""
-        words: list[list[Tile]] = self.find_words()
+        words = self.find_words()
 
-        legal_turn: bool = self.validate_turn(words)
         words_dict: dict[str, int] = {}
+        legal_turn = self.validate_turn(words)
 
         if legal_turn:
             words_dict = self.score_words(words)
@@ -122,14 +119,14 @@ class Board:
 
     def score_words(self, words: list[list[Tile]]) -> dict[str, int]:
         """Returns a dict matching every word in words to its score"""
-        words_dict = {}
+        words_dict: dict[str, int] = {}
 
         for word in words:
             words_dict[tiles_to_str(word)] = self.score_word(word)
 
         return words_dict
 
-    def score_word(self, word: list[Tile]):
+    def score_word(self, word: list[Tile]) -> int:
         """Returns the score for a played word"""
         word_score = 0
         word_multiplier = 1
@@ -159,14 +156,16 @@ class Board:
 
         return word_score * word_multiplier
 
-    def get_tile_at(self, row: int, col: int):
+    def get_tile_at(self, row: int, col: int) -> Tile:
         """Returns the tile at the given coordinates"""
         return self.board[row][col]
 
     def validate_turn(self, words) -> bool:
         """Returns true if the played tiles makes a valid turn, otherwise False"""
 
-        def find_center(coords: tuple[int, int], visited: list[tuple[int, int]]):
+        def find_center(
+            coords: tuple[int, int], visited: list[tuple[int, int]]
+        ) -> bool:
             """
             Searches the board using depth-first search to ensure that the tile
             at the given coordinates can eventually trace back to the center tile
@@ -234,15 +233,15 @@ class Board:
 
     def find_words(self) -> list[list[Tile]]:
         """Finds all words created by the current turn"""
-        words = []
+        words: list[list[Tile]] = []
         for tile in self.current_turn_tiles:
             coords = tile.coords
 
-            down_word = (
+            down_word: list[Tile] = (
                 self.find_string(coords, -1, 0)[::-1]
                 + self.find_string(coords, 1, 0)[1:]
             )
-            across_word = (
+            across_word: list[Tile] = (
                 self.find_string(coords, 0, -1)[::-1]
                 + self.find_string(coords, 0, 1)[1:]
             )
@@ -254,7 +253,7 @@ class Board:
 
         return words
 
-    def find_string(self, coords: tuple[int, int], drow: int, dcol: int):
+    def find_string(self, coords: tuple[int, int], drow: int, dcol: int) -> list[Tile]:
         """
         Searches the board in a specified direction, and
         adds all tiles to a list until an empty tile is found
@@ -262,7 +261,7 @@ class Board:
 
         row = coords[0]
         col = coords[1]
-        letters = []
+        letters: list[Tile] = []
         tile = self.get_tile_at(row, col)
         while not tile in EMPTY_TILES:
             letters.append(tile)

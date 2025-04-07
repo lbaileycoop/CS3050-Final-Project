@@ -103,9 +103,9 @@ class AI:
 
     def find_all_moves(self):
         """Finds all possible moves than can be made this turn"""
-        possible_moves = []
+        possible_moves: list[list[Tile]] = []
         for row in self.board.get_board():
-            possible_anchors = []
+            possible_anchors: list[Tile] = []
 
             for tile in row:
                 coords = tile.coords
@@ -172,7 +172,7 @@ class AI:
 
         return legal_moves
 
-    def next_square(self, square: Tile):
+    def next_square(self, square: Tile) -> Tile | None:
         """
         Returns the next square in the row, or
         None if passed square is the end of the row

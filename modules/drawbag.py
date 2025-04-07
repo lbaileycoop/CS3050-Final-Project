@@ -9,12 +9,12 @@ class Drawbag:
     Class representing the draw bag
 
     Attributes:
-        drawbag (lst): A list containing the tiles in the draw bag
+        drawbag (list(Tile)): A list containing the tiles in the draw bag
     """
 
     def __init__(self):
         """Initializes a draw bag object"""
-        self.drawbag = []
+        self.drawbag: list[Tile] = []
         self.initialize_drawbag()
 
     def add_tile(self, tile: Tile, quantity: int):
@@ -53,10 +53,10 @@ class Drawbag:
         self.add_tile(TILES["blank"], 2)
         shuffle(self.drawbag)
 
-    def draw_tile(self):
+    def draw_tile(self) -> Tile:
         """Function to simulate drawing a tile from the draw bag"""
         return self.drawbag.pop()
 
-    def get_remaining_tiles(self):
+    def get_remaining_tiles(self) -> int:
         """Function to get the amount of tiles remaining in the draw bag"""
         return len(self.drawbag)

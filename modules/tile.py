@@ -39,7 +39,7 @@ class Tile:
         but with coords set to None"""
         return cls(tile.letter, tile.value, tile.image_path)
 
-    def collides_with_point(self, point):
+    def collides_with_point(self, point) -> bool:
         """Delegate collision detection to the sprite"""
         return self.sprite.collides_with_point(point)
 
