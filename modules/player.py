@@ -2,6 +2,7 @@
 
 from .drawbag import Drawbag
 from .rack import Rack
+from .tile import Tile
 
 
 class Player:
@@ -46,3 +47,8 @@ class Player:
     def add_score(self, score: int):
         """Function to increment the player's score"""
         self.score += score
+
+    def add_tiles(self, tiles: list[Tile]):
+        """Adds tiles to the rack from a passed list of tiles"""
+        for tile in tiles:
+            self.rack.add_tile(Tile.copy(tile))

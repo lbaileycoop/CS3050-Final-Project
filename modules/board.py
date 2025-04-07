@@ -117,8 +117,6 @@ class Board:
         if legal_turn:
             words_dict = self.score_words(words)
             self.reset_current_turn_tiles()
-        else:
-            self.clear_current_turn_tiles()
 
         return legal_turn, words_dict
 
@@ -144,17 +142,18 @@ class Board:
 
             letter_score = tile.value
 
-            # Check for letter multipliers
-            board_location = ORIGINAL_BOARD[row][col]
+            if tile in self.current_turn_tiles:
+                # If tile was played this turn, check for multipliers
+                board_location = ORIGINAL_BOARD[row][col]
 
-            if board_location == DL:
-                letter_multiplier *= 2
-            elif board_location == TL:
-                letter_multiplier *= 3
-            elif board_location in (DW, ST):
-                word_multiplier *= 2
-            elif board_location == TW:
-                word_multiplier *= 3
+                if board_location == DL:
+                    letter_multiplier *= 2
+                elif board_location == TL:
+                    letter_multiplier *= 3
+                elif board_location in (DW, ST):
+                    word_multiplier *= 2
+                elif board_location == TW:
+                    word_multiplier *= 3
 
             word_score += letter_score * letter_multiplier
 

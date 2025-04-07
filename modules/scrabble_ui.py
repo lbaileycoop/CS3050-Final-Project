@@ -518,8 +518,9 @@ class ScrabbleUI(arcade.View):
     def reset_turn(self):
         """Reset the current turn"""
         # self.board.set_board(self.saved_board_state)
-        self.player.set_rack(self.saved_rack_state)
-        # self.board.clear_current_turn_tiles()
+        # self.player.set_rack(self.saved_rack_state)
+        self.player.add_tiles(self.board.get_current_turn_tiles())
+        self.board.clear_current_turn_tiles()
         self.update_board_display()
         self.update_rack_display()
 
@@ -612,7 +613,7 @@ class ScrabbleUI(arcade.View):
                 elif button_sprite == self.play_word_button:
                     is_valid, words = self.board.play_turn()
                     if is_valid:
-                        score = sum([s for s in words.values()])
+                        score = sum(words.values())
 
                         curr_player = self.game_manager.get_current_turn_player()
                         curr_player.add_score(score)
@@ -622,8 +623,8 @@ class ScrabbleUI(arcade.View):
 
                         self.game_manager.next_turn()
 
-                        for word in words:
-                            self.game_history[curr_player].append((word, words[word]))
+                        for word, points in words.items():
+                            self.game_history[curr_player].append((word, points))
                         self.update_text_display()
 
                         arcade.schedule_once(

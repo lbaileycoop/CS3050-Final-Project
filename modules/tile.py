@@ -33,6 +33,12 @@ class Tile:
         self.sprite: arcade.Sprite = arcade.Sprite(image_path)
         self.sprite.scale = self.scale
 
+    @classmethod
+    def copy(cls, tile):
+        """Creates a tile with the same values as the passed tile,
+        but with coords set to None"""
+        return cls(tile.letter, tile.value, tile.image_path)
+
     def collides_with_point(self, point):
         """Delegate collision detection to the sprite"""
         return self.sprite.collides_with_point(point)
