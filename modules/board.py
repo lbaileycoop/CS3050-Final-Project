@@ -130,6 +130,9 @@ class Board:
         for word in words:
             words_dict[tiles_to_str(word)] = self.score_word(word)
 
+        if len(self.current_turn_tiles) == 7:
+            words_dict["BINGO!!!"] = 50
+
         return words_dict
 
     def score_word(self, word: list[Tile]) -> int:
