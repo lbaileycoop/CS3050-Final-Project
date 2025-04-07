@@ -17,7 +17,6 @@ class Rack:
     def __init__(self, drawbag: Drawbag):
         """Initializes a rack object for the start of the game"""
         self.rack: list[Tile] = []
-        self.add_tile(Tile("", 0, "./assets/images/clear.png"))
         self.fill_rack(drawbag)
 
     def add_tile(self, tile: Tile):
