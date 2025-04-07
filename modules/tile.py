@@ -47,6 +47,16 @@ class Tile:
         """Setter function for scale"""
         self.scale = scale
 
+    def set_blank(self, new_letter: str):
+        """Sets the letter of a blank tile into the passed letter"""
+        self.letter = new_letter
+        self.image_path = f"./assets/images/{new_letter}.png"
+
+    def reset_blank(self):
+        """Removes chosen letter from blank tile"""
+        self.letter = ""
+        self.image_path = "./assets/images/clear.png"
+
 
 # Dictionary to define and store all tiles
 TILES = {

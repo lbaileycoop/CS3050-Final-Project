@@ -519,6 +519,7 @@ class ScrabbleUI(arcade.View):
         """Reset the current turn"""
         # self.board.set_board(self.saved_board_state)
         # self.player.set_rack(self.saved_rack_state)
+        self.board.reset_blanks()
         self.player.add_tiles(self.board.get_current_turn_tiles())
         self.board.clear_current_turn_tiles()
         self.update_board_display()
@@ -666,7 +667,7 @@ class ScrabbleUI(arcade.View):
                     new_tile = Tile(letter, value, image_path)
                     self.board.update_tile(row, col, new_tile)
 
-                    board_sprite.texture = arcade.load_texture(image_path)
+                    board_sprite.texture = arcade.load_texture(new_tile.image_path)
 
                     # Remove the tile from player's rack
                     self.player.rack.remove_tile(

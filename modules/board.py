@@ -78,9 +78,13 @@ class Board:
         self.clear_current_turn_tiles()
 
     def update_tile(self, row: int, col: int, tile: Tile):
-        """Function to update a tile in the board"""
+        """Sets the tile at the passed coordinates to the passed tile"""
         self.board[row][col] = tile
         tile.coords = (row, col)
+
+        if tile.letter == "":
+            # TODO: implement function to take input for new_letter
+            tile.set_blank("a")
         self.current_turn_tiles.append(tile)
 
     def remove_current_tile(self, tile: Tile):
@@ -95,6 +99,12 @@ class Board:
         """Clears the tiles placed this turn"""
         while len(self.current_turn_tiles) > 0:
             self.remove_current_tile(self.current_turn_tiles[0])
+
+    def reset_blanks(self):
+        """Changes any blank tiles placed this turn back into blanks"""
+        for tile in self.current_turn_tiles:
+            if self.current_turn_tiles[0].value == 0:
+                self.current_turn_tiles[0].reset_blank()
 
     def get_current_turn_tiles(self) -> list[Tile]:
         """Getter function for the list of tiles placed this turn"""
