@@ -81,10 +81,6 @@ class Board:
         """Sets the tile at the passed coordinates to the passed tile"""
         self.board[row][col] = tile
         tile.coords = (row, col)
-
-        if tile.letter == "":
-            # TODO: implement function to take input for new_letter
-            tile.set_blank("a")
         self.current_turn_tiles.append(tile)
 
     def remove_current_tile(self, tile: Tile):

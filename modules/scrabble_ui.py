@@ -660,11 +660,11 @@ class ScrabbleUI(arcade.View):
                     ) or self.game_manager.get_current_turn_player() == self.computer:
                         continue
 
-                    letter = self.held_tile.letter
-                    value = self.held_tile.value
-                    image_path = self.held_tile.image_path
+                    new_tile = Tile.copy(self.held_tile)
 
-                    new_tile = Tile(letter, value, image_path)
+                    if new_tile.letter == "":
+                        # TODO: implement function to take input for new_letter
+                        new_tile.set_blank("a")
                     self.board.update_tile(row, col, new_tile)
 
                     board_sprite.texture = arcade.load_texture(new_tile.image_path)
