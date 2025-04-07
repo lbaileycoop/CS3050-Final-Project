@@ -34,11 +34,7 @@ class Player:
 
     def refill_rack(self, drawbag: Drawbag):
         """Function to refill the player's rack when a turn is played"""
-        if drawbag.get_remaining_tiles() and len(self.rack.get_rack()) < 7:
-            num_tiles_to_draw: int = 7 - len(self.rack.get_rack())
-            for _ in range(num_tiles_to_draw):
-                if drawbag.get_remaining_tiles():
-                    self.rack.add_tile(drawbag.draw_tile())
+        self.rack.fill_rack(drawbag)
 
     def get_score(self) -> int:
         """Getter function for the player's current sore"""

@@ -55,8 +55,13 @@ class Drawbag:
 
     def draw_tile(self) -> Tile:
         """Function to simulate drawing a tile from the draw bag"""
-        return self.drawbag.pop()
+        if not self.is_empty():
+            return self.drawbag.pop()
 
     def get_remaining_tiles(self) -> int:
         """Function to get the amount of tiles remaining in the draw bag"""
         return len(self.drawbag)
+
+    def is_empty(self) -> bool:
+        """Returns whether or not a the drawbag is empty"""
+        return len(self.drawbag) == 0

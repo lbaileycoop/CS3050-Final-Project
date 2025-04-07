@@ -3,6 +3,8 @@
 from .drawbag import Drawbag
 from .tile import Tile
 
+RACK_SIZE = 7
+
 
 class Rack:
     """
@@ -15,7 +17,7 @@ class Rack:
     def __init__(self, drawbag: Drawbag):
         """Initializes a rack object for the start of the game"""
         self.rack: list[Tile] = []
-        self.initialize_rack(drawbag)
+        self.fill_rack(drawbag)
 
     def add_tile(self, tile: Tile):
         """Fucntion to add a tile to the current rack"""
@@ -25,11 +27,11 @@ class Rack:
         """Function to insert a tile into a specific position"""
         self.rack.insert(index, tile)
 
-    def get_rack(self):
+    def get_rack(self) -> list[Tile]:
         """Getter function for the rack list"""
         return self.rack
 
-    def set_rack(self, new_rack):
+    def set_rack(self, new_rack: list[Tile]):
         """Setter function for the rack"""
         self.rack = new_rack
 
@@ -37,9 +39,9 @@ class Rack:
         """Removes a specified tile from the rack"""
         self.rack.remove(tile)
 
-    def initialize_rack(self, drawbag: Drawbag):
-        """Initializes a rack for the beginning of the game with 7 tiles from the draw bag"""
-        for _ in range(7):
+    def fill_rack(self, drawbag: Drawbag):
+        """Fills all empty spaces in the rack"""
+        while len(self.rack) < RACK_SIZE and not drawbag.is_empty():
             self.rack.append(drawbag.draw_tile())
 
     def len_rack(self):

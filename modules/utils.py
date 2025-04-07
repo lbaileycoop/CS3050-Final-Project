@@ -22,7 +22,12 @@ def valid_word(word: str) -> bool:
     return DICTIONARY.has_key(word)
 
 
-def get_possible_words(input_string: str = "", num_free_letters: int = 0):
+def tiles_to_str(tiles: list[Tile]) -> str:
+    """Returns the corresponding string created by a list of tiles"""
+    return "".join([tile.letter for tile in tiles])
+
+
+def get_possible_words(input_string: str = "", num_free_letters: int = 0) -> list[str]:
     """
     Gets valid words that can be formed with the given letters (tiles)
     Can be used for AI to decide a move for them to play
@@ -34,12 +39,12 @@ def get_possible_words(input_string: str = "", num_free_letters: int = 0):
         list of all valid words that can be formed from the given letters/tiles
     """
 
-    def get_permutations(s):
+    def get_permutations(s) -> set[str]:
         return set("".join(p) for p in permutations(s))
 
-    words = set()
+    words: set[str] = set()
 
-    free_letter_combinations = set()
+    free_letter_combinations: set[str] = set()
     if num_free_letters > 0:
         for free_letters in combinations(ALPHABET, num_free_letters):
             free_letter_combinations.add("".join(free_letters))
@@ -58,8 +63,3 @@ def get_possible_words(input_string: str = "", num_free_letters: int = 0):
                         words.add(perm)
 
     return list(words)
-
-
-def tiles_to_str(tiles: list[Tile]) -> str:
-    """Returns the corresponding string created by a list of tiles"""
-    return "".join([tile.letter for tile in tiles])

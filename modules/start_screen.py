@@ -27,7 +27,7 @@ class StartScreen(arcade.View):
                 "Warning: Could not load start_screen.png. Using solid background color."
             )
 
-        self.sprites = arcade.SpriteList()
+        self.sprites: arcade.SpriteList = arcade.SpriteList()
 
         self.sprites.append(self.background)
 
@@ -46,39 +46,16 @@ class StartScreen(arcade.View):
     def on_draw(self):
         """Render the start screen."""
         self.clear()
-        # # Draw the background image if it exists
-        # if self.background:
-        #     arcade.draw_texture_rect(
-        #         self.background,
-        #         arcade.Rect(
-        #             0, WINDOW_WIDTH,
-        #             0, WINDOW_HEIGHT,
-        #             WINDOW_WIDTH, WINDOW_HEIGHT,
-        #             WINDOW_WIDTH/2,WINDOW_HEIGHT/2
-        #             )
-        #     )
-        # # Draw the title
-        # arcade.draw_text(
-        #     "Scrabble",
-        #     WINDOW_WIDTH / 2,
-        #     WINDOW_HEIGHT / 2 + 50,
-        #     arcade.color.WHITE,
-        #     font_size=50,
-        #     anchor_x="center"
-        # )
-        # # Draw instructions
-        # arcade.draw_text(
-        #     "Press any key to start",
-        #     WINDOW_WIDTH / 2,
-        #     WINDOW_HEIGHT / 2 - 50,
-        #     arcade.color.WHITE,
-        #     font_size=20,
-        #     anchor_x="center"
-        # )
 
         self.sprites.draw()
 
     def on_key_press(self, symbol, modifiers):
         """Switch to the Scrabble game when any key is pressed."""
+        self.start_game()
+
+    def on_mouse_press(self, x, y, button, modifiers):
+        self.start_game()
+
+    def start_game(self):
         game_view = ScrabbleUI()
         self.window.show_view(game_view)
