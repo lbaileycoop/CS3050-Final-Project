@@ -1,10 +1,10 @@
 """Module that contains the definition for an AI object"""
 
-from .config import ROWS, COLS, DICTIONARY, ALPHABET
+from .config import ROWS, COLS, ALPHABET
 from .board import Board, EMPTY_TILES
 from .rack import Rack
 from .tile import Tile
-from .utils import valid_word, tiles_to_str
+from .utils import valid_word, tiles_to_str, find_permutations_recursive, copy_list
 
 CROSS_CHECKS_ACROSS = [[ALPHABET for _ in range(COLS)] for _ in range(ROWS)]
 CROSS_CHECKS_DOWN = [[ALPHABET for _ in range(ROWS)] for _ in range(COLS)]
@@ -101,82 +101,102 @@ class AI:
                 if word[-1].coords[0] + 1 < ROWS:
                     CROSS_CHECKS_DOWN[word[-1].coords[0] + 1][col] = []
 
-    def find_all_moves(self):
-        """Finds all possible moves than can be made this turn"""
-        possible_moves: list[list[Tile]] = []
-        for row in self.board.get_board():
-            possible_anchors: list[Tile] = []
+    def across_moves(
+        self,
+    ) -> list[list[tuple[Tile, tuple[int, int]]]]:
+        possible_moves: list[list[tuple[Tile, tuple[int, int]]]] = []
 
-            for tile in row:
-                coords = tile.coords
-                board = self.board.get_board()
-                if (
-                    board[coords[0] + 1][coords[1]] in EMPTY_TILES
-                    or board[coords[0] - 1][coords[1]] in EMPTY_TILES
-                    or board[coords[0]][coords[1] + 1] in EMPTY_TILES
-                    or board[coords[0]][coords[1] - 1] in EMPTY_TILES
-                ):
-                    possible_anchors.append(tile)
-
-            for i, anchor in enumerate(possible_anchors):
-                limit = 0
-                if i > 0:
-                    limit = anchor.coords[0] - possible_anchors[i - 1].coords[0]
-                else:
-                    limit = anchor.coords[0]
-
-                possible_moves.append(self.left_part("", anchor, limit, []))
+        for row in range(len(self.board.get_board())):
+            possible_moves += self.moves_in_row(row)
 
         return possible_moves
 
-    def left_part(
-        self, partial_word: str, square: Tile, limit: int, legal_moves: list[str]
-    ):
-        """Recursively finds all possible parts of the words to the left of the anchor"""
-        legal_moves += self.extend_right(partial_word, square, legal_moves)
-        if limit > 0:
-            for l in DICTIONARY.itervalues(partial_word):
-                if l in self.rack.get_rack_letters:
-                    tile = Tile(l)
-                    self.rack.remove_tile(tile)
-                    self.left_part(partial_word + l, limit - 1, square, legal_moves)
-                    self.rack.add_tile(tile)
-        return legal_moves
+    def moves_in_row(self, row: int) -> list[list[tuple[Tile, tuple[int, int]]]]:
+        possible_moves: list[list[tuple[Tile, tuple[int, int]]]] = []
 
-    def extend_right(self, partial_word: str, square: Tile, legal_moves: list[str]):
-        """Expands rightwards from a starting square and returns all possible moves"""
-        next_square = self.next_square(square)
-        if square in EMPTY_TILES:
-            if tiles_to_str(partial_word) in DICTIONARY.keys():
-                legal_moves.append(partial_word)
-            for l in DICTIONARY.itervalues(partial_word):
+        letters_in_row = tiles_to_str(
+            tile for tile in self.board.get_board()[row] if tile not in EMPTY_TILES
+        )
+
+        possible_words = find_permutations_recursive(
+            "".join(self.rack.get_rack_letters()) + letters_in_row, []
+        )
+        feasable_words = []
+
+        if letters_in_row != "":
+            for word in possible_words:
+                for letter in letters_in_row:
+                    if letter in word:
+                        feasable_words.append(word)
+        elif row == 7:
+            feasable_words = possible_words
+
+        for word in feasable_words:
+            first_letter = word[0]
+
+            for col in range(COLS - len(word)):
+                tile = self.board.get_tile_at(row, col)
+
                 if (
-                    l in self.rack.get_rack_letters()
-                    and l in CROSS_CHECKS_ACROSS[square.coords[0]][square.coords[1]]
+                    tile.letter == first_letter
+                    and col + len(word) <= COLS
+                    or tile in EMPTY_TILES
                 ):
-                    tile = Tile(l)
-                    self.rack.remove_tile(tile)
-                    if square.coords[1] < COLS:
-                        legal_moves.append(
-                            self.extend_right(
-                                partial_word + l, next_square, legal_moves
-                            )
-                        )
-                    self.rack.add_tile(tile)
-        else:
-            l = square.letter
-            if l in DICTIONARY.itervalues(partial_word):
-                legal_moves.append(
-                    self.extend_right(partial_word + l, next_square, legal_moves)
+                    move = self.find_word(
+                        word, (row, col), [], copy_list(self.rack.get_rack())
+                    )
+                    if move is not None and move not in possible_moves:
+                        possible_moves.append(move)
+
+        return possible_moves
+
+    def find_word(
+        self,
+        target: str,
+        coords: tuple[int, int],
+        curr: list[tuple[Tile, tuple[int, int]]],
+        remaining_rack: list[Tile],
+    ):
+
+        if target == "":
+            return curr
+
+        if coords is None:
+            return None
+
+        square = self.board.get_tile_at(coords[0], coords[1])
+        next_letter = target[0]
+        remaining_rack = copy_list(remaining_rack)
+        curr = copy_list(curr)
+
+        if square not in EMPTY_TILES:
+            if square.letter == next_letter:
+                return self.find_word(
+                    target[1:],
+                    self.next_coords(coords),
+                    curr,
+                    remaining_rack,
                 )
+            return None
 
-        return legal_moves
+        if next_letter in CROSS_CHECKS_ACROSS[coords[0]][coords[1]]:
+            for tile in remaining_rack.copy():
+                if next_letter == tile.letter:
+                    curr.append((tile, coords))
+                    remaining_rack.remove(tile)
+                    return self.find_word(
+                        target[1:],
+                        self.next_coords(coords),
+                        curr,
+                        remaining_rack,
+                    )
+        return None
 
-    def next_square(self, square: Tile) -> Tile | None:
+    def next_coords(self, coords: tuple[int, int]) -> tuple[int, int] | None:
         """
-        Returns the next square in the row, or
+        Returns the coordinates of the next square in the row, or
         None if passed square is the end of the row
         """
-        if square.coords[1] + 1 < COLS:
-            return self.board.get_board()[square.coords[0]][square.coords[1] + 1]
+        if coords[1] + 1 < COLS:
+            return (coords[0], coords[1] + 1)
         return None

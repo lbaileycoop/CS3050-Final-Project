@@ -57,6 +57,9 @@ class Tile:
         self.letter = ""
         self.image_path = "./assets/images/clear.png"
 
+    def __str__(self):
+        return self.letter
+
 
 # Dictionary to define and store all tiles
 TILES = {
