@@ -24,7 +24,7 @@ def valid_word(word: str) -> bool:
 
 def tiles_to_str(tiles: list[Tile]) -> str:
     """Returns the corresponding string created by a list of tiles"""
-    return "".join([tile.letter for tile in tiles])
+    return "".join([(tile.letter if tile.letter != "blank" else "_") for tile in tiles])
 
 
 def get_possible_words(input_string: str = "", num_free_letters: int = 0) -> list[str]:
@@ -63,3 +63,37 @@ def get_possible_words(input_string: str = "", num_free_letters: int = 0) -> lis
                         words.add(perm)
 
     return list(words)
+
+
+def find_permutations_recursive(
+    remaining_letters: str, words: list[str], substr: str = ""
+):
+    if valid_word(substr):
+        words.append(substr)
+
+    if remaining_letters == "":
+        return words
+    for letter in remaining_letters:
+        if DICTIONARY.has_subtrie(substr + letter):
+            find_permutations_recursive(
+                remaining_letters.replace(letter, "", 1), words, substr + letter
+            )
+        elif letter == "_":
+            for edge in DICTIONARY.iterkeys(substr, True):
+                find_permutations_recursive(
+                    remaining_letters.replace("_", "", 1), words, substr + edge[0]
+                )
+
+    return words
+
+
+def copy_list(original: list) -> list:
+    """Returns a deep copy of the list"""
+    copy = []
+
+    for obj in original:
+        if isinstance(obj, list):
+            obj = copy_list(obj)
+        copy.append(obj)
+
+    return copy

@@ -1,7 +1,7 @@
 """Module containing the definition for a Board object"""
 
 from .tile import Tile, TILES
-from .utils import valid_word, tiles_to_str
+from .utils import valid_word, tiles_to_str, copy_list
 
 
 TW = TILES["triple_word"]
@@ -99,8 +99,8 @@ class Board:
     def reset_blanks(self):
         """Changes any blank tiles placed this turn back into blanks"""
         for tile in self.current_turn_tiles:
-            if self.current_turn_tiles[0].value == 0:
-                self.current_turn_tiles[0].reset_blank()
+            if tile.value == 0:
+                tile.reset_blank()
 
     def get_current_turn_tiles(self) -> list[Tile]:
         """Getter function for the list of tiles placed this turn"""
@@ -122,6 +122,29 @@ class Board:
             self.reset_current_turn_tiles()
 
         return legal_turn, words_dict
+
+    def test_turn(
+        self, move: list[tuple[Tile, tuple[int, int]]]
+    ) -> tuple[bool, dict[str, int]]:
+        """Performs the logic for testing if a turn is legal"""
+        backup_board = copy_list(self.board)
+
+        for tile in move:
+            self.update_tile(tile[1][0], tile[1][1], tile[0])
+
+        words = self.find_words()
+
+        words_dict: dict[str, int] = {}
+        legal_turn = self.validate_turn(words)
+
+        if legal_turn:
+            words_dict = self.score_words(words)
+
+        self.board = backup_board
+
+        self.clear_current_turn_tiles()
+
+        return legal_turn, sum(words_dict.values())
 
     def score_words(self, words: list[list[Tile]]) -> dict[str, int]:
         """Returns a dict matching every word in words to its score"""

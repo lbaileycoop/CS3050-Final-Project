@@ -18,8 +18,9 @@ from .tile import Tile
 from .drawbag import Drawbag
 from .player import Player
 from .board import Board, ORIGINAL_BOARD
-from .utils import to_coords, get_possible_words
+from .utils import to_coords, get_possible_words, tiles_to_str
 from .game_manager import GameManager
+from .ai_logic import AI
 
 
 class ScrabbleUI(arcade.View):
@@ -156,71 +157,110 @@ class ScrabbleUI(arcade.View):
         self.save_game_state()
 
     def computer_turn(self, computer_player_object, difficulty, drawbag, game_manager):
-        letters = ""
-        num_free_letters = 0
-        for tile in computer_player_object.get_rack():
-            if tile.letter == "":
-                num_free_letters += 1
-            else:
-                letters += tile.letter
+        ai = AI(self.board, computer_player_object.rack)
+        moves = ai.across_moves()
+        valid_moves = {}
+        max_score = 0
+        max_move = None
+        for move in moves:
+            is_valid, score = self.board.test_turn(move)
+            if is_valid:
+                if score not in valid_moves:
+                    valid_moves[score] = []
+                valid_moves[score].append(move)
+                if score > max_score:
+                    max_move = move
 
-        possible_words = get_possible_words(letters, num_free_letters)
-        # TODO: For now just determining word quality by length, but should be changed to score
-        sorted_possible_words = sorted(possible_words, key=len)
+        if max_move is None:
+            print("No moves found")
+            self.game_manager.next_turn()
+            return
 
-        word_to_play = ""
-        if difficulty == "easy":
-            word_to_play = sorted_possible_words[0]
-        elif difficulty == "medium":
-            word_to_play = sorted_possible_words[len(sorted_possible_words) // 2]
-        elif difficulty == "hard":
-            word_to_play = sorted_possible_words[len(sorted_possible_words) - 1]
-        else:
-            word_to_play = sorted_possible_words[
-                random.randint(0, len(sorted_possible_words) - 1)
-            ]
+        for tile in max_move:
+            self.board.update_tile(tile[1][0], tile[1][1], tile[0])
 
-        print(word_to_play)
+        _, words = self.board.play_turn()
 
-        # get corresponding tiles
-        tiles_to_play = []
-        for ch in word_to_play:
-            for i, tile in enumerate(computer_player_object.get_rack()):
-                if tile.letter == ch:
-                    tiles_to_play.append(computer_player_object.get_rack().pop(i))
-                    break
+        self.board.reset_current_turn_tiles()
 
-        # TODO: implement actual logic for places the computer should play,
-        # for now, just places them where there is empty space
-        for row in range(15):
-            for col in range(15):
-                if (
-                    tiles_to_play
-                    and self.board.get_board()[row][col].letter
-                    == ORIGINAL_BOARD[row][col].letter
-                ):
-                    tile_to_play = tiles_to_play.pop(0)
-                    self.board.update_tile(row, col, tile_to_play)
+        curr_player = self.game_manager.get_current_turn_player()
+        curr_player.add_score(sum(words.values()))
 
-        # play the turn
-        word, is_valid, score = self.board.validate_turn()
+        curr_player.refill_rack(self.drawbag)
+        self.update_rack_display()
 
-        if is_valid:
-            computer_player_object.add_score(score)
+        self.game_manager.next_turn()
 
-            # Refill computer rack
-            computer_player_object.refill_rack(drawbag)
+        for word, points in words.items():
+            self.game_history[curr_player].append((word, points))
+        self.update_text_display()
+        self.update_board_display()
 
-            game_manager.next_turn()
+        # letters = ""
+        # num_free_letters = 0
+        # for tile in computer_player_object.get_rack():
+        #     if tile.letter == "":
+        #         num_free_letters += 1
+        #     else:
+        #         letters += tile.letter
 
-            self.game_history[computer_player_object].append((word, score))
-            self.update_text_display()
-            self.update_board_display()
+        # possible_words = get_possible_words(letters, num_free_letters)
+        # # TODO: For now just determining word quality by length, but should be changed to score
+        # sorted_possible_words = sorted(possible_words, key=len)
 
-            self.save_game_state()
-        else:
-            self.reset_turn()
-            print("ERROR in computer turn")
+        # word_to_play = ""
+        # if difficulty == "easy":
+        #     word_to_play = sorted_possible_words[0]
+        # elif difficulty == "medium":
+        #     word_to_play = sorted_possible_words[len(sorted_possible_words) // 2]
+        # elif difficulty == "hard":
+        #     word_to_play = sorted_possible_words[len(sorted_possible_words) - 1]
+        # else:
+        #     word_to_play = sorted_possible_words[
+        #         random.randint(0, len(sorted_possible_words) - 1)
+        #     ]
+
+        # print(word_to_play)
+
+        # # get corresponding tiles
+        # tiles_to_play = []
+        # for ch in word_to_play:
+        #     for i, tile in enumerate(computer_player_object.get_rack()):
+        #         if tile.letter == ch:
+        #             tiles_to_play.append(computer_player_object.get_rack().pop(i))
+        #             break
+
+        # # TODO: implement actual logic for places the computer should play,
+        # # for now, just places them where there is empty space
+        # for row in range(15):
+        #     for col in range(15):
+        #         if (
+        #             tiles_to_play
+        #             and self.board.get_board()[row][col].letter
+        #             == ORIGINAL_BOARD[row][col].letter
+        #         ):
+        #             tile_to_play = tiles_to_play.pop(0)
+        #             self.board.update_tile(row, col, tile_to_play)
+
+        # # play the turn
+        # word, is_valid, score = self.board.validate_turn()
+
+        # if is_valid:
+        #     computer_player_object.add_score(score)
+
+        #     # Refill computer rack
+        #     computer_player_object.refill_rack(drawbag)
+
+        #     game_manager.next_turn()
+
+        #     self.game_history[computer_player_object].append((word, score))
+        #     self.update_text_display()
+        #     self.update_board_display()
+
+        #     self.save_game_state()
+        # else:
+        #     self.reset_turn()
+        #     print("ERROR in computer turn")
 
     def get_board_position(self, row, col):
         """Calculate the screen position for a board tile at the given row and column."""
