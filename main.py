@@ -9,8 +9,6 @@ def main():
     window = arcade.Window(
         config.WINDOW_WIDTH, config.WINDOW_HEIGHT, config.WINDOW_TITLE
     )
-    print(utils.get_possible_words("abcd"))
-    print(utils.find_permutations_recursive("abcd", []))
 
     start_screen = StartScreen()  # Start with the start screen
 

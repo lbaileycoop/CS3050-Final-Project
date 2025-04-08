@@ -379,12 +379,12 @@ class ScrabbleUI(arcade.View):
             return
 
         for tile in max_move:
+            computer_player_object.rack.remove_tile(tile[0])
             self.board.update_tile(tile[1][0], tile[1][1], tile[0])
 
         _, words = self.board.play_turn()
 
         self.board.reset_current_turn_tiles()
-
         curr_player = self.game_manager.get_current_turn_player()
         curr_player.add_score(sum(words.values()))
 
@@ -538,6 +538,179 @@ class ScrabbleUI(arcade.View):
             turn_text = "Your turn!"
         else:
             turn_text = "Computer thinking..."
+
+        self.text_objects = [
+            arcade.Text(
+                turn_text,
+                self.turn_display.center_x - 190,
+                self.turn_display.center_y - 75,
+                arcade.color.WHITE,
+                22,
+                380,
+                "center",
+                "Minecraft",
+            ),
+            arcade.Text(
+                "Scoreboard",
+                self.scoreboard_background.center_x - 70,
+                self.scoreboard_background.center_y + 240,
+                arcade.color.WHITE,
+                18,
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                f"Player: {self.player.get_score()}",
+                self.scoreboard_background.center_x - 140,
+                self.scoreboard_background.center_y + 200,
+                arcade.color.WHITE,
+                14,
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                f"Computer: {self.computer.get_score()}",
+                self.scoreboard_background.center_x - 140,
+                (self.scoreboard_background.center_y + 160) - offset,
+                arcade.color.WHITE,
+                14,
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                "Play Word",
+                self.BUTTON_X - 42,
+                self.play_word_button.center_y - 6,
+                arcade.color.WHITE,
+                14,
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                "Reset",
+                self.BUTTON_X - 25,
+                self.reset_button.center_y - 6,
+                arcade.color.WHITE,
+                14,
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                "Trade In",
+                self.BUTTON_X - 42,
+                self.trade_in_button.center_y - 6,
+                arcade.color.WHITE,
+                14,
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                "Letter Distribution",
+                self.letter_dist_background.center_x - 100,
+                self.letter_dist_background.center_y + 240,
+                arcade.color.WHITE,
+                18,
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                "A - 9         N - 6",
+                self.letter_dist_background.center_x - 80,
+                self.letter_dist_background.center_y + 200,
+                arcade.color.WHITE,
+                14,
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                "B - 2         O - 8",
+                self.letter_dist_background.center_x - 80,
+                self.letter_dist_background.center_y + 165,
+                arcade.color.WHITE,
+                14,
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                "C - 2         P - 2",
+                self.letter_dist_background.center_x - 80,
+                self.letter_dist_background.center_y + 130,
+                arcade.color.WHITE,
+                14,
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                "D - 4         Q - 1",
+                self.letter_dist_background.center_x - 80,
+                self.letter_dist_background.center_y + 95,
+                arcade.color.WHITE,
+                14,
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                "E - 12        R - 6",
+                self.letter_dist_background.center_x - 80,
+                self.letter_dist_background.center_y + 60,
+                arcade.color.WHITE,
+                14,
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                "F - 2          S - 4",
+                self.letter_dist_background.center_x - 80,
+                self.letter_dist_background.center_y + 25,
+                arcade.color.WHITE,
+                14,
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                "G - 3          T - 6",
+                self.letter_dist_background.center_x - 80,
+                self.letter_dist_background.center_y - 10,
+                arcade.color.WHITE,
+                14,
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                "H - 2          U - 4",
+                self.letter_dist_background.center_x - 80,
+                self.letter_dist_background.center_y - 45,
+                arcade.color.WHITE,
+                14,
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                "I - 9           V - 2",
+                self.letter_dist_background.center_x - 80,
+                self.letter_dist_background.center_y - 80,
+                arcade.color.WHITE,
+                14,
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                "J - 1           W - 2",
+                self.letter_dist_background.center_x - 80,
+                self.letter_dist_background.center_y - 115,
+                arcade.color.WHITE,
+                14,
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                "K - 1           X - 1",
+                self.letter_dist_background.center_x - 80,
+                self.letter_dist_background.center_y - 150,
+                arcade.color.WHITE,
+                14,
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                "L - 4          Y - 2",
+                self.letter_dist_background.center_x - 80,
+                self.letter_dist_background.center_y - 185,
+                arcade.color.WHITE,
+                14,
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                "M - 2          Z - 1",
+                self.letter_dist_background.center_x - 80,
+                self.letter_dist_background.center_y - 220,
+                arcade.color.WHITE,
+                14,
+                font_name="Minecraft",
+            ),
+        ]
 
         # For displaying previous turn results
         for i in range(len(self.game_history[self.player])):
