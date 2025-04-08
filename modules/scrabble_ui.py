@@ -155,6 +155,208 @@ class ScrabbleUI(arcade.View):
         # make a save state for the board and player's rack for resetting the turn
         self.save_game_state()
 
+    def on_mouse_motion(self, x, y, dx, dy):
+        """
+        Called whenever the mouse moves.
+        """
+
+        # Make tiles move up slightly to indicate the player hovering over them
+        for idx in range(1, len(self.rack_sprites)):
+            if self.rack_sprites[idx].collides_with_point((x, y)):
+                new_y = self.get_rack_position(idx)[1] + 20
+                self.rack_sprites[idx].center_y = new_y
+            else:
+                _, original_y = self.get_rack_position(idx)
+                self.rack_sprites[idx].center_y = original_y
+
+        # Change button colors to indicate player hovering over them
+        for button in self.button_sprites:
+            if button == self.reset_button:
+                image_name = "reset_button"
+            elif button == self.trade_in_button:
+                image_name = "trade_in_button"
+            elif button == self.play_word_button:
+                image_name = "play_word_button"
+            else:
+                continue
+
+            if button.collides_with_point((x, y)):
+                button.texture = arcade.load_texture(
+                    f"./assets/images/{image_name}_hover.png"
+                )
+            else:
+                button.texture = arcade.load_texture(
+                    f"./assets/images/{image_name}.png"
+                )
+
+        if self.held_tile:
+            self.held_tile.sprite.center_x = x
+            self.held_tile.sprite.center_y = y
+            # Adjust scale based on whether tile is over the board
+            if self.board_background.collides_with_point((x, y)):
+                self.held_tile.sprite.scale = 0.63
+            else:
+                self.held_tile.sprite.scale = 1.2
+
+    def on_mouse_press(self, x, y, button, modifiers):
+        """
+        Called when the user presses a mouse button.
+        """
+        # Check if a rack tile was clicked
+        for i, tile in enumerate(self.rack_tiles):
+            if tile.sprite.collides_with_point((x, y)):
+                self.held_tile = tile
+                self.held_tile_index = i
+                break
+
+        # Check if a button was clicked
+        for button_sprite in self.button_sprites:
+            if button_sprite.collides_with_point((x, y)):
+                if button_sprite == self.play_word_button:
+                    self.play_turn()
+                elif button_sprite == self.reset_button:
+                    self.reset_turn()
+                elif button_sprite == self.trade_in_button:
+                    self.trade_in()
+
+    def on_mouse_release(self, x, y, button, modifiers):
+        """
+        Called when a user releases a mouse button.
+        """
+        if self.held_tile:
+            placed = False
+
+            # If a tile is dropped over a space on the board, update the board position to that tile
+            for i, board_sprite in enumerate(self.board_sprites):
+                if board_sprite.collides_with_point((x, y)):
+                    col, row = to_coords(i)
+
+                    # ensure tiles can only be played on empty board tiles
+                    if (
+                        self.board.get_board()[row][col].letter
+                        != ORIGINAL_BOARD[row][col].letter
+                    ) or self.game_manager.get_current_turn_player() == self.computer:
+                        continue
+
+                    new_tile = Tile.copy(self.held_tile)
+
+                    if new_tile.letter == "":
+                        # TODO: implement function to take input for new_letter
+                        new_tile.set_blank("a")
+                    self.board.update_tile(row, col, new_tile)
+
+                    board_sprite.texture = arcade.load_texture(new_tile.image_path)
+
+                    # Remove the tile from player's rack
+                    self.player.rack.remove_tile(
+                        self.player.get_rack()[self.held_tile_index]
+                    )
+
+                    # Update the rack display
+                    self.update_rack_display()
+
+                    placed = True
+                    break
+
+            # Allow for dragging tiles onto one another in the rack to swap their positions
+            if not placed:
+                for i, rack_tile in enumerate(self.rack_tiles):
+                    if (
+                        rack_tile != self.held_tile
+                        and rack_tile.sprite.collides_with_point((x, y))
+                    ):
+                        self.swap_rack_tiles(self.held_tile_index, i)
+                        placed = True
+                        break
+
+            # If the tile is not dragged to a valid spot on the board, reset it back to rack
+            if (
+                not placed
+                and self.held_tile_index is not None
+                and self.held_tile_index < len(self.original_rack_positions)
+            ):
+                original_x, original_y = self.original_rack_positions[
+                    self.held_tile_index
+                ]
+                self.held_tile.sprite.center_x = original_x
+                self.held_tile.sprite.center_y = original_y
+                self.held_tile.sprite.scale = 1.2
+
+            self.held_tile = None
+            self.held_tile_index = None
+
+    def on_draw(self):
+        """
+        Render the screen.
+        """
+        # This command should happen before we start drawing. It will clear
+        # the screen to the background color, and erase what we drew last frame.
+        self.clear()
+
+        # Call draw() on all sprite lists below
+        self.other_sprites.draw()
+        self.board_sprites.draw()
+        self.button_sprites.draw()
+
+        for text_object in self.text_objects:
+            text_object.draw()
+
+        self.rack_sprites.draw()
+
+    def reset(self):
+        """Reset the game to the initial state."""
+        # Do changes needed to restart the game here if you want to support that
+
+    def play_turn(self):
+        is_valid, words = self.board.play_turn()
+        if is_valid:
+            score = sum(words.values())
+
+            curr_player = self.game_manager.get_current_turn_player()
+            curr_player.add_score(score)
+
+            curr_player.refill_rack(self.drawbag)
+            self.update_rack_display()
+
+            self.game_manager.next_turn()
+
+            for word, points in words.items():
+                self.game_history[curr_player].append((word, points))
+            self.update_text_display()
+
+            arcade.schedule_once(
+                lambda dt: self.computer_turn(
+                    self.computer,
+                    self.DIFFICULTY,
+                    self.drawbag,
+                    self.game_manager,
+                ),
+                5,
+            )
+            self.save_game_state()
+        else:
+            self.reset_turn()
+
+    def reset_turn(self):
+        """Reset the current turn"""
+        # self.board.set_board(self.saved_board_state)
+        # self.player.set_rack(self.saved_rack_state)
+        self.board.reset_blanks()
+        self.player.add_tiles(self.board.get_current_turn_tiles())
+        self.board.clear_current_turn_tiles()
+        self.update_board_display()
+        self.update_rack_display()
+
+        # Clear any held tile
+        self.held_tile = None
+        self.held_tile_index = None
+
+        self.save_game_state()
+
+    def trade_in(self):
+        # TODO
+        pass
+
     def computer_turn(self, computer_player_object, difficulty, drawbag, game_manager):
         letters = ""
         num_free_letters = 0
@@ -222,17 +424,29 @@ class ScrabbleUI(arcade.View):
             self.reset_turn()
             print("ERROR in computer turn")
 
-    def get_board_position(self, row, col):
-        """Calculate the screen position for a board tile at the given row and column."""
-        x = col * (TILE_SIZE + TILE_GAP) + self.BOARD_START_X
-        y = (ROWS - 1 - row) * (TILE_SIZE + TILE_GAP) + self.BOARD_START_Y
-        return x, y
+    def save_game_state(self):
+        curr_board = self.board.get_board()
+        self.saved_board_state = [[None for _ in range(15)] for _ in range(15)]
+        for row in range(15):
+            for col in range(15):
+                tile = curr_board[row][col]
+                self.saved_board_state[row][col] = Tile(
+                    tile.letter, tile.value, tile.image_path
+                )
 
-    def get_rack_position(self, tile_index):
-        """Calculate the screen position for a rack tile at the given index."""
-        x = self.BOARD_START_X + (self.RACK_TILE_SPACING * tile_index)
-        y = self.rack_graphic.center_y
-        return x, y
+        curr_rack = self.player.get_rack()
+        self.saved_rack_state = []
+        for tile in curr_rack:
+            self.saved_rack_state.append(Tile(tile.letter, tile.value, tile.image_path))
+
+    def swap_rack_tiles(self, index1, index2):
+        """Swap two tiles in the player's rack and update the display"""
+        # Swap tiles in the player's rack
+        rack = self.player.get_rack()
+        rack[index1], rack[index2] = rack[index2], rack[index1]
+
+        # Update visuals
+        self.update_rack_display()
 
     def update_board_display(self):
         """Update the visual representation of the board to match the current board state"""
@@ -285,179 +499,6 @@ class ScrabbleUI(arcade.View):
         else:
             turn_text = "Computer thinking..."
 
-        self.text_objects = [
-            arcade.Text(
-                turn_text,
-                self.turn_display.center_x - 190,
-                self.turn_display.center_y - 75,
-                arcade.color.WHITE,
-                22,
-                380,
-                "center",
-                "Minecraft",
-            ),
-            arcade.Text(
-                "Scoreboard",
-                self.scoreboard_background.center_x - 70,
-                self.scoreboard_background.center_y + 240,
-                arcade.color.WHITE,
-                18,
-                font_name="Minecraft",
-            ),
-            arcade.Text(
-                f"Player: {self.player.get_score()}",
-                self.scoreboard_background.center_x - 140,
-                self.scoreboard_background.center_y + 200,
-                arcade.color.WHITE,
-                14,
-                font_name="Minecraft",
-            ),
-            arcade.Text(
-                f"Computer: {self.computer.get_score()}",
-                self.scoreboard_background.center_x - 140,
-                (self.scoreboard_background.center_y + 160) - offset,
-                arcade.color.WHITE,
-                14,
-                font_name="Minecraft",
-            ),
-            arcade.Text(
-                "Play Word",
-                self.BUTTON_X - 42,
-                self.play_word_button.center_y - 6,
-                arcade.color.WHITE,
-                14,
-                font_name="Minecraft",
-            ),
-            arcade.Text(
-                "Reset",
-                self.BUTTON_X - 25,
-                self.reset_button.center_y - 6,
-                arcade.color.WHITE,
-                14,
-                font_name="Minecraft",
-            ),
-            arcade.Text(
-                "Trade In",
-                self.BUTTON_X - 42,
-                self.trade_in_button.center_y - 6,
-                arcade.color.WHITE,
-                14,
-                font_name="Minecraft",
-            ),
-            arcade.Text(
-                "Letter Distribution",
-                self.letter_dist_background.center_x - 100,
-                self.letter_dist_background.center_y + 240,
-                arcade.color.WHITE,
-                18,
-                font_name="Minecraft",
-            ),
-            arcade.Text(
-                "A - 9         N - 6",
-                self.letter_dist_background.center_x - 80,
-                self.letter_dist_background.center_y + 200,
-                arcade.color.WHITE,
-                14,
-                font_name="Minecraft",
-            ),
-            arcade.Text(
-                "B - 2         O - 8",
-                self.letter_dist_background.center_x - 80,
-                self.letter_dist_background.center_y + 165,
-                arcade.color.WHITE,
-                14,
-                font_name="Minecraft",
-            ),
-            arcade.Text(
-                "C - 2         P - 2",
-                self.letter_dist_background.center_x - 80,
-                self.letter_dist_background.center_y + 130,
-                arcade.color.WHITE,
-                14,
-                font_name="Minecraft",
-            ),
-            arcade.Text(
-                "D - 4         Q - 1",
-                self.letter_dist_background.center_x - 80,
-                self.letter_dist_background.center_y + 95,
-                arcade.color.WHITE,
-                14,
-                font_name="Minecraft",
-            ),
-            arcade.Text(
-                "E - 12        R - 6",
-                self.letter_dist_background.center_x - 80,
-                self.letter_dist_background.center_y + 60,
-                arcade.color.WHITE,
-                14,
-                font_name="Minecraft",
-            ),
-            arcade.Text(
-                "F - 2          S - 4",
-                self.letter_dist_background.center_x - 80,
-                self.letter_dist_background.center_y + 25,
-                arcade.color.WHITE,
-                14,
-                font_name="Minecraft",
-            ),
-            arcade.Text(
-                "G - 3          T - 6",
-                self.letter_dist_background.center_x - 80,
-                self.letter_dist_background.center_y - 10,
-                arcade.color.WHITE,
-                14,
-                font_name="Minecraft",
-            ),
-            arcade.Text(
-                "H - 2          U - 4",
-                self.letter_dist_background.center_x - 80,
-                self.letter_dist_background.center_y - 45,
-                arcade.color.WHITE,
-                14,
-                font_name="Minecraft",
-            ),
-            arcade.Text(
-                "I - 9           V - 2",
-                self.letter_dist_background.center_x - 80,
-                self.letter_dist_background.center_y - 80,
-                arcade.color.WHITE,
-                14,
-                font_name="Minecraft",
-            ),
-            arcade.Text(
-                "J - 1           W - 2",
-                self.letter_dist_background.center_x - 80,
-                self.letter_dist_background.center_y - 115,
-                arcade.color.WHITE,
-                14,
-                font_name="Minecraft",
-            ),
-            arcade.Text(
-                "K - 1           X - 1",
-                self.letter_dist_background.center_x - 80,
-                self.letter_dist_background.center_y - 150,
-                arcade.color.WHITE,
-                14,
-                font_name="Minecraft",
-            ),
-            arcade.Text(
-                "L - 4          Y - 2",
-                self.letter_dist_background.center_x - 80,
-                self.letter_dist_background.center_y - 185,
-                arcade.color.WHITE,
-                14,
-                font_name="Minecraft",
-            ),
-            arcade.Text(
-                "M - 2          Z - 1",
-                self.letter_dist_background.center_x - 80,
-                self.letter_dist_background.center_y - 220,
-                arcade.color.WHITE,
-                14,
-                font_name="Minecraft",
-            ),
-        ]
-
         # For displaying previous turn results
         for i in range(len(self.game_history[self.player])):
             turn = self.game_history[self.player][i]
@@ -487,222 +528,14 @@ class ScrabbleUI(arcade.View):
                 )
             )
 
-    def swap_rack_tiles(self, index1, index2):
-        """Swap two tiles in the player's rack and update the display"""
-        # Swap tiles in the player's rack
-        rack = self.player.get_rack()
-        rack[index1], rack[index2] = rack[index2], rack[index1]
+    def get_board_position(self, row, col):
+        """Calculate the screen position for a board tile at the given row and column."""
+        x = col * (TILE_SIZE + TILE_GAP) + self.BOARD_START_X
+        y = (ROWS - 1 - row) * (TILE_SIZE + TILE_GAP) + self.BOARD_START_Y
+        return x, y
 
-        # Update visuals
-        self.update_rack_display()
-
-    def reset(self):
-        """Reset the game to the initial state."""
-        # Do changes needed to restart the game here if you want to support that
-
-    def save_game_state(self):
-        curr_board = self.board.get_board()
-        self.saved_board_state = [[None for _ in range(15)] for _ in range(15)]
-        for row in range(15):
-            for col in range(15):
-                tile = curr_board[row][col]
-                self.saved_board_state[row][col] = Tile(
-                    tile.letter, tile.value, tile.image_path
-                )
-
-        curr_rack = self.player.get_rack()
-        self.saved_rack_state = []
-        for tile in curr_rack:
-            self.saved_rack_state.append(Tile(tile.letter, tile.value, tile.image_path))
-
-    def reset_turn(self):
-        """Reset the current turn"""
-        # self.board.set_board(self.saved_board_state)
-        # self.player.set_rack(self.saved_rack_state)
-        self.board.reset_blanks()
-        self.player.add_tiles(self.board.get_current_turn_tiles())
-        self.board.clear_current_turn_tiles()
-        self.update_board_display()
-        self.update_rack_display()
-
-        # Clear any held tile
-        self.held_tile = None
-        self.held_tile_index = None
-
-        self.save_game_state()
-
-    def on_draw(self):
-        """
-        Render the screen.
-        """
-        # This command should happen before we start drawing. It will clear
-        # the screen to the background color, and erase what we drew last frame.
-        self.clear()
-
-        # Call draw() on all sprite lists below
-        self.other_sprites.draw()
-        self.board_sprites.draw()
-        self.button_sprites.draw()
-
-        for text_object in self.text_objects:
-            text_object.draw()
-
-        self.rack_sprites.draw()
-
-    def on_mouse_motion(self, x, y, dx, dy):
-        """
-        Called whenever the mouse moves.
-        """
-
-        # Make tiles move up slightly to indicate the player hovering over them
-        for idx in range(1, len(self.rack_sprites)):
-            if self.rack_sprites[idx].collides_with_point((x, y)):
-                new_y = self.get_rack_position(idx)[1] + 20
-                self.rack_sprites[idx].center_y = new_y
-            else:
-                _, original_y = self.get_rack_position(idx)
-                self.rack_sprites[idx].center_y = original_y
-
-        # Change button colors to indicate player hovering over them
-        for button in self.button_sprites:
-            if button == self.reset_button:
-                image_name = "reset_button"
-            elif button == self.trade_in_button:
-                image_name = "trade_in_button"
-            elif button == self.play_word_button:
-                image_name = "play_word_button"
-            else:
-                continue
-
-            if button.collides_with_point((x, y)):
-                button.texture = arcade.load_texture(
-                    f"./assets/images/{image_name}_hover.png"
-                )
-            else:
-                button.texture = arcade.load_texture(
-                    f"./assets/images/{image_name}.png"
-                )
-
-        if self.held_tile:
-            self.held_tile.sprite.center_x = x
-            self.held_tile.sprite.center_y = y
-            # Adjust scale based on whether tile is over the board
-            if self.board_background.collides_with_point((x, y)):
-                self.held_tile.sprite.scale = 0.63
-            else:
-                self.held_tile.sprite.scale = 1.2
-
-    def on_mouse_press(self, x, y, button, modifiers):
-        """
-        Called when the user presses a mouse button.
-        """
-        # Check if a rack tile was clicked
-        for i, tile in enumerate(self.rack_tiles):
-            if tile.sprite.collides_with_point((x, y)):
-                self.held_tile = tile
-                self.held_tile_index = i
-                break
-
-        # Check if a button was clicked
-        for button_sprite in self.button_sprites:
-            if button_sprite.collides_with_point((x, y)):
-                if button_sprite == self.reset_button:
-                    self.reset_turn()
-                elif button_sprite == self.trade_in_button:
-                    # TODO: implement tile trade in
-                    pass
-                elif button_sprite == self.play_word_button:
-                    is_valid, words = self.board.play_turn()
-                    if is_valid:
-                        score = sum(words.values())
-
-                        curr_player = self.game_manager.get_current_turn_player()
-                        curr_player.add_score(score)
-
-                        curr_player.refill_rack(self.drawbag)
-                        self.update_rack_display()
-
-                        self.game_manager.next_turn()
-
-                        for word, points in words.items():
-                            self.game_history[curr_player].append((word, points))
-                        self.update_text_display()
-
-                        arcade.schedule_once(
-                            lambda dt: self.computer_turn(
-                                self.computer,
-                                self.DIFFICULTY,
-                                self.drawbag,
-                                self.game_manager,
-                            ),
-                            5,
-                        )
-                        self.save_game_state()
-                    else:
-                        self.reset_turn()
-
-    def on_mouse_release(self, x, y, button, modifiers):
-        """
-        Called when a user releases a mouse button.
-        """
-        if self.held_tile:
-            placed = False
-
-            # If a tile is dropped over a space on the board, update the board position to that tile
-            for i, board_sprite in enumerate(self.board_sprites):
-                if board_sprite.collides_with_point((x, y)):
-                    col, row = to_coords(i)
-
-                    # ensure tiles can only be played on empty board tiles
-                    if (
-                        self.board.get_board()[row][col].letter
-                        != ORIGINAL_BOARD[row][col].letter
-                    ) or self.game_manager.get_current_turn_player() == self.computer:
-                        continue
-
-                    new_tile = Tile.copy(self.held_tile)
-
-                    if new_tile.letter == "":
-                        # TODO: implement function to take input for new_letter
-                        new_tile.set_blank("a")
-                    self.board.update_tile(row, col, new_tile)
-
-                    board_sprite.texture = arcade.load_texture(new_tile.image_path)
-
-                    # Remove the tile from player's rack
-                    self.player.rack.remove_tile(
-                        self.player.get_rack()[self.held_tile_index]
-                    )
-
-                    # Update the rack display
-                    self.update_rack_display()
-
-                    placed = True
-                    break
-
-            # Allow for dragging tiles onto one another in the rack to swap their positions
-            if not placed:
-                for i, rack_tile in enumerate(self.rack_tiles):
-                    if (
-                        rack_tile != self.held_tile
-                        and rack_tile.sprite.collides_with_point((x, y))
-                    ):
-                        self.swap_rack_tiles(self.held_tile_index, i)
-                        placed = True
-                        break
-
-            # If the tile is not dragged to a valid spot on the board, reset it back to rack
-            if (
-                not placed
-                and self.held_tile_index is not None
-                and self.held_tile_index < len(self.original_rack_positions)
-            ):
-                original_x, original_y = self.original_rack_positions[
-                    self.held_tile_index
-                ]
-                self.held_tile.sprite.center_x = original_x
-                self.held_tile.sprite.center_y = original_y
-                self.held_tile.sprite.scale = 1.2
-
-            self.held_tile = None
-            self.held_tile_index = None
+    def get_rack_position(self, tile_index):
+        """Calculate the screen position for a rack tile at the given index."""
+        x = self.BOARD_START_X + (self.RACK_TILE_SPACING * tile_index)
+        y = self.rack_graphic.center_y
+        return x, y
