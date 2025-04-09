@@ -3,6 +3,7 @@
 from .tile import Tile, TILES
 from .config import ALPHABET, ROWS, COLS
 from .utils import valid_word, tiles_to_str, copy_list
+from .player import Player
 
 
 TW = TILES["triple_word"]
@@ -114,7 +115,7 @@ class Board:
         """Sets current_turn_tiles back to an empty list for a new turn"""
         self.current_turn_tiles = []
 
-    def play_turn(self) -> tuple[bool, dict[str, int]]:
+    def play_turn(self, player: Player) -> tuple[bool, dict[str, int]]:
         """Performs the logic for attempting to play a turn"""
         words = self.find_words()
 
@@ -125,6 +126,10 @@ class Board:
             words_dict = self.score_words(words)
             self.update_cross_checks()
             self.reset_current_turn_tiles()
+        else:
+            self.reset_blanks()
+            player.add_tiles(self.get_current_turn_tiles())
+            self.clear_current_turn_tiles()
 
         return legal_turn, words_dict
 

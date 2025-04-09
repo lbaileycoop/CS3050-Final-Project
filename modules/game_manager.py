@@ -30,9 +30,10 @@ class GameManager:
         """Starts the scrabble game by choosing a random player to act first"""
         self.turn = random.randint(0, len(self.player_list) - 1)
 
-    def next_turn(self):
-        """Switches the turn to the next player in rotation"""
+    def next_turn(self) -> Player:
+        """Switches the turn to the next player in rotation and returns the new player"""
         self.turn = (self.turn + 1) % len(self.player_list)
+        return self.get_current_turn_player()
 
     def get_current_turn(self) -> int:
         """Getter function for the current turn as an integer"""

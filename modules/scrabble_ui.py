@@ -20,7 +20,7 @@ from .player import Player
 from .board import Board, ORIGINAL_BOARD
 from .utils import to_coords, get_possible_words, tiles_to_str
 from .game_manager import GameManager
-from .ai_logic import AI
+from .scrabble_ai import AI
 
 
 class ScrabbleUI(arcade.View):
@@ -61,9 +61,9 @@ class ScrabbleUI(arcade.View):
 
         # initializing game objects
         self.drawbag = Drawbag()
-        self.player = Player("You", self.drawbag)
-        self.computer = Player("Computer", self.drawbag)
         self.board = Board()
+        self.player = Player("You", self.drawbag)
+        self.computer = AI(self.board, self.drawbag)
 
         # initialize game manager
         self.game_manager = GameManager(
@@ -73,7 +73,6 @@ class ScrabbleUI(arcade.View):
         """ Sprites creation for graphics """
         # displays the current board state
         self.board_sprites: arcade.SpriteList = arcade.SpriteList()
-        self.update_board_display()
 
         # displays player's rack
         self.rack_sprites: arcade.SpriteList = arcade.SpriteList()
@@ -81,7 +80,6 @@ class ScrabbleUI(arcade.View):
         self.rack_graphic.center_x = int(WINDOW_WIDTH / 2)
         self.rack_graphic.center_y = BORDER_Y * 0.8
         self.rack_sprites.append(self.rack_graphic)
-        self.update_rack_display()
 
         # displays buttons
         self.button_sprites: arcade.SpriteList = arcade.SpriteList()
@@ -142,17 +140,10 @@ class ScrabbleUI(arcade.View):
 
         # Displays all text
         arcade.load_font("./assets/Minecraft.ttf")
-        self.update_text_display()
+        self.update_displays()
 
-        # If the computer is selected to go first, they move
-        if self.game_manager.get_current_turn_player() == self.computer:
-            arcade.schedule_once(
-                lambda dt: self.computer_turn(
-                    self.computer, self.DIFFICULTY, self.drawbag, self.game_manager
-                ),
-                5,
-            )
-
+        self.curr_player = self.game_manager.get_current_turn_player()
+        self.next_turn()
         # make a save state for the board and player's rack for resetting the turn
         self.save_game_state()
 
@@ -309,31 +300,20 @@ class ScrabbleUI(arcade.View):
         # Do changes needed to restart the game here if you want to support that
 
     def play_turn(self):
-        is_valid, words = self.board.play_turn()
+        is_valid, words = self.board.play_turn(self.curr_player)
         if is_valid:
             score = sum(words.values())
 
-            curr_player = self.game_manager.get_current_turn_player()
-            curr_player.add_score(score)
+            self.curr_player.add_score(score)
 
-            curr_player.refill_rack(self.drawbag)
-            self.update_rack_display()
-
-            self.game_manager.next_turn()
+            self.curr_player.refill_rack(self.drawbag)
 
             for word, points in words.items():
-                self.game_history[curr_player].append((word, points))
-            self.update_text_display()
+                self.game_history[self.curr_player].append((word, points))
 
-            arcade.schedule_once(
-                lambda dt: self.computer_turn(
-                    self.computer,
-                    self.DIFFICULTY,
-                    self.drawbag,
-                    self.game_manager,
-                ),
-                5,
-            )
+            self.curr_player = self.game_manager.next_turn()
+            self.update_displays()
+            self.next_turn()
             self.save_game_state()
         else:
             self.reset_turn()
@@ -342,9 +322,6 @@ class ScrabbleUI(arcade.View):
         """Reset the current turn"""
         # self.board.set_board(self.saved_board_state)
         # self.player.set_rack(self.saved_rack_state)
-        self.board.reset_blanks()
-        self.player.add_tiles(self.board.get_current_turn_tiles())
-        self.board.clear_current_turn_tiles()
         self.update_board_display()
         self.update_rack_display()
 
@@ -358,9 +335,8 @@ class ScrabbleUI(arcade.View):
         # TODO
         pass
 
-    def computer_turn(self, computer_player_object, difficulty, drawbag, game_manager):
-        ai = AI(self.board, computer_player_object.rack)
-        moves = ai.find_moves()
+    def computer_turn(self):
+        moves = self.curr_player.find_moves()
         valid_moves = {}
         max_score = 0
         max_move = None
@@ -374,30 +350,25 @@ class ScrabbleUI(arcade.View):
                     max_score = score
                     max_move = move
 
-        if max_move is None:
-            print("No moves found")
-            self.game_manager.next_turn()
-            return
-
         for tile in max_move:
-            computer_player_object.rack.remove_tile(tile[0])
+            self.curr_player.rack.remove_tile(tile[0])
             self.board.update_tile(tile[1][0], tile[1][1], tile[0])
 
-        _, words = self.board.play_turn()
+        self.play_turn()
 
-        self.board.reset_current_turn_tiles()
-        curr_player = self.game_manager.get_current_turn_player()
-        curr_player.add_score(sum(words.values()))
+        # self.board.reset_current_turn_tiles()
+        # curr_player = self.game_manager.get_current_turn_player()
+        # curr_player.add_score(sum(words.values()))
 
-        curr_player.refill_rack(self.drawbag)
-        self.update_rack_display()
+        # curr_player.refill_rack(self.drawbag)
+        # self.update_rack_display()
 
-        self.game_manager.next_turn()
+        # self.game_manager.next_turn()
 
-        for word, points in words.items():
-            self.game_history[curr_player].append((word, points))
-        self.update_text_display()
-        self.update_board_display()
+        # for word, points in words.items():
+        #     self.game_history[curr_player].append((word, points))
+        # self.update_text_display()
+        # self.update_board_display()
 
         # letters = ""
         # num_free_letters = 0
@@ -465,6 +436,10 @@ class ScrabbleUI(arcade.View):
         #     self.reset_turn()
         #     print("ERROR in computer turn")
 
+    def next_turn(self):
+        if isinstance(self.curr_player, AI):
+            arcade.schedule_once(lambda _: self.computer_turn(), 1)
+
     def save_game_state(self):
         curr_board = self.board.get_board()
         self.saved_board_state = [[None for _ in range(15)] for _ in range(15)]
@@ -488,6 +463,12 @@ class ScrabbleUI(arcade.View):
 
         # Update visuals
         self.update_rack_display()
+
+    def update_displays(self):
+        """Calls all 3 update methods"""
+        self.update_board_display()
+        self.update_rack_display()
+        self.update_text_display()
 
     def update_board_display(self):
         """Update the visual representation of the board to match the current board state"""

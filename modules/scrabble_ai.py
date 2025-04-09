@@ -10,16 +10,18 @@ from .utils import (
     find_permutations_recursive,
     copy_list,
 )
+from .player import Player
+from .drawbag import Drawbag
 
 
-class AI:
+class AI(Player):
     """TODO"""
 
-    def __init__(self, board: Board, rack: Rack):
+    def __init__(self, board: Board, drawbag: Drawbag):
+        super().__init__("Computer", drawbag)
         self.board = board
         self.testing_board = []
         self.curr_cross_checks = []
-        self.rack = rack
 
     def find_moves(
         self,
