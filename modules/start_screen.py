@@ -50,12 +50,9 @@ class StartScreen(arcade.View):
         self.sprites.draw()
 
     def on_key_press(self, symbol, modifiers):
-        """Switch to the Scrabble game when any key is pressed."""
-        self.start_game()
-
-    def on_mouse_press(self, x, y, button, modifiers):
         self.start_game()
 
     def start_game(self):
+        """Changes the view to the Scrabble game"""
         game_view = ScrabbleUI()
         self.window.show_view(game_view)

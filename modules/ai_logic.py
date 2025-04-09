@@ -1,7 +1,7 @@
 """Module that contains the definition for an AI object
 as well as the methods for maintaining cross-check-sets"""
 
-from .config import ROWS, COLS, ALPHABET
+from .config import ROWS, COLS
 from .board import Board, EMPTY_TILES, CROSS_CHECKS_ACROSS, CROSS_CHECKS_DOWN
 from .rack import Rack
 from .tile import Tile
@@ -21,9 +21,13 @@ class AI:
         self.curr_cross_checks = []
         self.rack = rack
 
-    def across_moves(
+    def find_moves(
         self,
     ) -> list[list[tuple[Tile, tuple[int, int]]]]:
+        """
+        Assembles a list of all possible moves
+        (optimistic, moves not verified yet)
+        """
         possible_moves_across: list[list[tuple[Tile, tuple[int, int]]]] = []
         possible_moves_down: list[list[tuple[Tile, tuple[int, int]]]] = []
 
@@ -45,6 +49,11 @@ class AI:
         return possible_moves_across + possible_moves_down
 
     def moves_in_row(self, row: int) -> list[list[tuple[Tile, tuple[int, int]]]]:
+        """
+        Finds all of the possible moves in the passed row
+
+        Also works for columns when the board is transposed
+        """
         possible_moves: list[list[tuple[Tile, tuple[int, int]]]] = []
 
         letters_in_row = tiles_to_str(
@@ -75,9 +84,7 @@ class AI:
                     and col + len(word) <= COLS
                     or tile in EMPTY_TILES
                 ):
-                    possible_moves += self.find_word(
-                        word, (row, col), [], copy_list(self.rack.get_rack()), []
-                    )
+                    possible_moves += self.find_word(word, (row, col), [], [])
 
         return possible_moves
 
@@ -85,14 +92,20 @@ class AI:
         self,
         target: str,
         coords: tuple[int, int],
-        curr: list[tuple[Tile, tuple[int, int]]],
-        remaining_rack: list[Tile],
+        curr_move: list[tuple[Tile, tuple[int, int]]],
         possible_moves: list[list[tuple[Tile, tuple[int, int]]]],
     ):
+        """Recursives traverses the row to the right to try and construct the target"""
+
+        remaining_rack = []
+
+        for tile in self.rack.get_rack():
+            if tile not in [move[0] for move in curr_move]:
+                remaining_rack.append(tile)
 
         if target == "":
-            if curr not in possible_moves:
-                possible_moves.append(curr)
+            if curr_move not in possible_moves:
+                possible_moves.append(curr_move)
             return possible_moves
 
         if coords is None:
@@ -100,16 +113,14 @@ class AI:
 
         square = self.testing_board[coords[0]][coords[1]]
         next_letter = target[0]
-        remaining_rack = copy_list(remaining_rack)
-        curr = copy_list(curr)
+        curr_move = copy_list(curr_move)
 
         if square not in EMPTY_TILES:
             if square.letter == next_letter:
                 return self.find_word(
                     target[1:],
                     self.next_coords(coords),
-                    curr,
-                    remaining_rack,
+                    curr_move,
                     possible_moves,
                 )
             return possible_moves
@@ -117,13 +128,12 @@ class AI:
         if next_letter in self.curr_cross_checks[coords[0]][coords[1]]:
             for tile in remaining_rack.copy():
                 if next_letter == tile.letter:
-                    curr.append((tile, coords))
+                    curr_move.append((tile, coords))
                     remaining_rack.remove(tile)
                     return self.find_word(
                         target[1:],
                         self.next_coords(coords),
-                        curr,
-                        remaining_rack,
+                        curr_move,
                         possible_moves,
                     )
         return possible_moves
@@ -138,6 +148,9 @@ class AI:
         return None
 
     def transpose_board(self):
+        """
+        Returns a transposed (swap rows and columns) version of the board
+        """
         transposed_board = []
 
         for row in range(ROWS):

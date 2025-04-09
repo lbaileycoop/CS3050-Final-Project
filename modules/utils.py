@@ -68,6 +68,10 @@ def get_possible_words(input_string: str = "", num_free_letters: int = 0) -> lis
 def find_permutations_recursive(
     remaining_letters: str, words: list[str], substr: str = ""
 ):
+    """
+    Recursively navigates the dictionary by character
+    to find all permutations of remaining_letters
+    """
     if valid_word(substr):
         words.append(substr)
 

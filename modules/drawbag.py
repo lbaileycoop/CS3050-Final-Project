@@ -53,10 +53,11 @@ class Drawbag:
         self.add_tile(TILES["blank"], 2)
         shuffle(self.drawbag)
 
-    def draw_tile(self) -> Tile:
+    def draw_tile(self) -> Tile | None:
         """Function to simulate drawing a tile from the draw bag"""
         if not self.is_empty():
             return self.drawbag.pop()
+        return None
 
     def get_remaining_tiles(self) -> int:
         """Function to get the amount of tiles remaining in the draw bag"""

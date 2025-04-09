@@ -360,7 +360,7 @@ class ScrabbleUI(arcade.View):
 
     def computer_turn(self, computer_player_object, difficulty, drawbag, game_manager):
         ai = AI(self.board, computer_player_object.rack)
-        moves = ai.across_moves()
+        moves = ai.find_moves()
         valid_moves = {}
         max_score = 0
         max_move = None
