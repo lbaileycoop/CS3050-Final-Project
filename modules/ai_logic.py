@@ -1,13 +1,15 @@
-"""Module that contains the definition for an AI object"""
+"""Module that contains the definition for an AI object
+as well as the methods for maintaining cross-check-sets"""
 
 from .config import ROWS, COLS, ALPHABET
-from .board import Board, EMPTY_TILES
+from .board import Board, EMPTY_TILES, CROSS_CHECKS_ACROSS, CROSS_CHECKS_DOWN
 from .rack import Rack
 from .tile import Tile
-from .utils import valid_word, tiles_to_str, find_permutations_recursive, copy_list
-
-CROSS_CHECKS_ACROSS = [[ALPHABET for _ in range(COLS)] for _ in range(ROWS)]
-CROSS_CHECKS_DOWN = [[ALPHABET for _ in range(ROWS)] for _ in range(COLS)]
+from .utils import (
+    tiles_to_str,
+    find_permutations_recursive,
+    copy_list,
+)
 
 
 class AI:
@@ -15,107 +17,38 @@ class AI:
 
     def __init__(self, board: Board, rack: Rack):
         self.board = board
+        self.testing_board = []
+        self.curr_cross_checks = []
         self.rack = rack
-
-    def update_cross_checks(self):
-        """Updates the cross-check lists for whenever a move is played"""
-
-        self.update_cross_checks_letters()
-        self.update_cross_checks_words()
-
-    def update_cross_checks_letters(self):
-        """Updates the cross-check lists parralel to every letter played"""
-        for tile in self.board.get_current_turn_tiles():
-            coords = tile.coords
-
-            across = bool(
-                self.board.get_current_turn_tiles()[0].coords[0]
-                - self.board.get_current_turn_tiles()[-1].coords[0]
-            )
-
-            if across:
-                CROSS_CHECKS_ACROSS[coords[0]][coords[1]] = []
-
-                if coords[0] - 1 > -1:
-                    CROSS_CHECKS_ACROSS[coords[0] - 1][coords[1]] = {
-                        letter
-                        for letter in ALPHABET
-                        if valid_word(
-                            letter
-                            + tiles_to_str(self.board.find_string(coords, 1, 0))[0]
-                        )
-                    }
-
-                if coords[0] + 1 < ROWS:
-                    CROSS_CHECKS_ACROSS[coords[0] + 1][coords[1]] = {
-                        letter
-                        for letter in ALPHABET
-                        if valid_word(
-                            tiles_to_str(self.board.find_string(coords, -1, 0))[::-1]
-                            + letter
-                        )
-                    }
-
-            if not across or len(self.board.get_current_turn_tiles()) == 1:
-                CROSS_CHECKS_DOWN[coords[0]][coords[1]] = []
-
-                if coords[1] - 1 > -1:
-                    CROSS_CHECKS_DOWN[coords[0]][coords[1] - 1] = {
-                        letter
-                        for letter in ALPHABET
-                        if valid_word(
-                            letter + tiles_to_str(self.board.find_string(coords, 0, 1))
-                        )
-                    }
-                if coords[1] + 1 < COLS:
-                    CROSS_CHECKS_DOWN[coords[0]][coords[1] + 1] = {
-                        letter
-                        for letter in ALPHABET
-                        if valid_word(
-                            tiles_to_str(self.board.find_string(coords, 0, -1))[::-1]
-                            + letter
-                        )
-                    }
-
-    def update_cross_checks_words(self):
-        """Updates the cross-check lists perpendicular to every word played"""
-        words = self.board.find_words()
-
-        for word in words:
-            row, col = 0, 0
-            if word[1].coords[0] - word[0].coords[0] == 0:
-                across = True
-                row = word[1].coords[0]
-            else:
-                across = False
-                col = word[1].coords[1]
-
-            if across:
-                if word[0].coords[1] - 1 > -1:
-                    CROSS_CHECKS_ACROSS[row][word[0].coords[1] - 1] = []
-                if word[-1].coords[1] + 1 < COLS:
-                    CROSS_CHECKS_ACROSS[row][word[-1].coords[1] + 1] = []
-            else:
-                if word[0].coords[0] - 1 > -1:
-                    CROSS_CHECKS_DOWN[word[0].coords[0] - 1][col] = []
-                if word[-1].coords[0] + 1 < ROWS:
-                    CROSS_CHECKS_DOWN[word[-1].coords[0] + 1][col] = []
 
     def across_moves(
         self,
     ) -> list[list[tuple[Tile, tuple[int, int]]]]:
-        possible_moves: list[list[tuple[Tile, tuple[int, int]]]] = []
+        possible_moves_across: list[list[tuple[Tile, tuple[int, int]]]] = []
+        possible_moves_down: list[list[tuple[Tile, tuple[int, int]]]] = []
 
-        for row in range(len(self.board.get_board())):
-            possible_moves += self.moves_in_row(row)
+        self.testing_board = copy_list(self.board.get_board())
+        self.curr_cross_checks = CROSS_CHECKS_ACROSS
 
-        return possible_moves
+        for row in range(len(self.testing_board)):
+            possible_moves_across += self.moves_in_row(row)
+
+        self.testing_board = self.transpose_board()
+        self.curr_cross_checks = CROSS_CHECKS_DOWN
+
+        for row in range(len(self.testing_board)):
+            possible_moves_down += self.moves_in_row(row)
+
+        for move in possible_moves_down:
+            for i, tile in enumerate(move):
+                move[i] = (tile[0], tile[1][::-1])
+        return possible_moves_across + possible_moves_down
 
     def moves_in_row(self, row: int) -> list[list[tuple[Tile, tuple[int, int]]]]:
         possible_moves: list[list[tuple[Tile, tuple[int, int]]]] = []
 
         letters_in_row = tiles_to_str(
-            tile for tile in self.board.get_board()[row] if tile not in EMPTY_TILES
+            tile for tile in self.testing_board[row] if tile not in EMPTY_TILES
         )
 
         possible_words = find_permutations_recursive(
@@ -135,18 +68,16 @@ class AI:
             first_letter = word[0]
 
             for col in range(COLS - len(word)):
-                tile = self.board.get_tile_at(row, col)
+                tile = self.testing_board[row][col]
 
                 if (
                     tile.letter == first_letter
                     and col + len(word) <= COLS
                     or tile in EMPTY_TILES
                 ):
-                    move = self.find_word(
-                        word, (row, col), [], copy_list(self.rack.get_rack())
+                    possible_moves += self.find_word(
+                        word, (row, col), [], copy_list(self.rack.get_rack()), []
                     )
-                    if move is not None and move not in possible_moves:
-                        possible_moves.append(move)
 
         return possible_moves
 
@@ -156,15 +87,18 @@ class AI:
         coords: tuple[int, int],
         curr: list[tuple[Tile, tuple[int, int]]],
         remaining_rack: list[Tile],
+        possible_moves: list[list[tuple[Tile, tuple[int, int]]]],
     ):
 
         if target == "":
-            return curr
+            if curr not in possible_moves:
+                possible_moves.append(curr)
+            return possible_moves
 
         if coords is None:
-            return None
+            return possible_moves
 
-        square = self.board.get_tile_at(coords[0], coords[1])
+        square = self.testing_board[coords[0]][coords[1]]
         next_letter = target[0]
         remaining_rack = copy_list(remaining_rack)
         curr = copy_list(curr)
@@ -176,10 +110,11 @@ class AI:
                     self.next_coords(coords),
                     curr,
                     remaining_rack,
+                    possible_moves,
                 )
-            return None
+            return possible_moves
 
-        if next_letter in CROSS_CHECKS_ACROSS[coords[0]][coords[1]]:
+        if next_letter in self.curr_cross_checks[coords[0]][coords[1]]:
             for tile in remaining_rack.copy():
                 if next_letter == tile.letter:
                     curr.append((tile, coords))
@@ -189,8 +124,9 @@ class AI:
                         self.next_coords(coords),
                         curr,
                         remaining_rack,
+                        possible_moves,
                     )
-        return None
+        return possible_moves
 
     def next_coords(self, coords: tuple[int, int]) -> tuple[int, int] | None:
         """
@@ -200,3 +136,13 @@ class AI:
         if coords[1] + 1 < COLS:
             return (coords[0], coords[1] + 1)
         return None
+
+    def transpose_board(self):
+        transposed_board = []
+
+        for row in range(ROWS):
+            transposed_board.append([])
+            for col in range(COLS):
+                transposed_board[row].append(self.board.get_board()[col][row])
+
+        return transposed_board

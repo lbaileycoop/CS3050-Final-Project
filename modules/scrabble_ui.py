@@ -371,6 +371,7 @@ class ScrabbleUI(arcade.View):
                     valid_moves[score] = []
                 valid_moves[score].append(move)
                 if score > max_score:
+                    max_score = score
                     max_move = move
 
         if max_move is None:

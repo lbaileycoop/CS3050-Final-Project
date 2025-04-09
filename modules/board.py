@@ -1,6 +1,7 @@
 """Module containing the definition for a Board object"""
 
 from .tile import Tile, TILES
+from .config import ALPHABET, ROWS, COLS
 from .utils import valid_word, tiles_to_str, copy_list
 
 
@@ -30,6 +31,9 @@ ORIGINAL_BOARD = [
     [BA, DW, BA, BA, BA, TL, BA, BA, BA, TL, BA, BA, BA, DW, BA],
     [TW, BA, BA, DL, BA, BA, BA, TW, BA, BA, BA, DL, BA, BA, TW],
 ]
+
+CROSS_CHECKS_ACROSS = [[ALPHABET for _ in range(COLS)] for _ in range(ROWS)]
+CROSS_CHECKS_DOWN = [[ALPHABET for _ in range(ROWS)] for _ in range(COLS)]
 
 
 class Board:
@@ -119,6 +123,7 @@ class Board:
 
         if legal_turn:
             words_dict = self.score_words(words)
+            self.update_cross_checks()
             self.reset_current_turn_tiles()
 
         return legal_turn, words_dict
@@ -233,7 +238,7 @@ class Board:
                 found = found or find_center((coords[0], coords[1] + 1), visited)
             if (
                 -1 < row < len(self.board)
-                and -1 < col + 1 < len(self.board[0])
+                and -1 < col - 1 < len(self.board[0])
                 and self.get_tile_at(row, col - 1) not in EMPTY_TILES
             ):
                 found = found or find_center((coords[0], coords[1] - 1), visited)
@@ -305,3 +310,84 @@ class Board:
                 break
 
         return letters
+
+    def update_cross_checks(self):
+        """Updates the cross-check lists for whenever a move is played"""
+
+        self.update_cross_checks_letters()
+        self.update_cross_checks_words()
+
+    def update_cross_checks_letters(self):
+        """Updates the cross-check lists parralel to every letter played"""
+        for tile in self.get_current_turn_tiles():
+            coords = tile.coords
+
+            across = bool(
+                self.get_current_turn_tiles()[0].coords[0]
+                - self.get_current_turn_tiles()[-1].coords[0]
+            )
+
+            if across:
+                CROSS_CHECKS_ACROSS[coords[0]][coords[1]] = []
+
+                if coords[0] - 1 > -1:
+                    CROSS_CHECKS_ACROSS[coords[0] - 1][coords[1]] = {
+                        letter
+                        for letter in ALPHABET
+                        if valid_word(
+                            letter + tiles_to_str(self.find_string(coords, 1, 0))[0]
+                        )
+                    }
+
+                if coords[0] + 1 < ROWS:
+                    CROSS_CHECKS_ACROSS[coords[0] + 1][coords[1]] = {
+                        letter
+                        for letter in ALPHABET
+                        if valid_word(
+                            tiles_to_str(self.find_string(coords, -1, 0))[::-1] + letter
+                        )
+                    }
+
+            if not across or len(self.get_current_turn_tiles()) == 1:
+                CROSS_CHECKS_DOWN[coords[0]][coords[1]] = []
+
+                if coords[1] - 1 > -1:
+                    CROSS_CHECKS_DOWN[coords[0]][coords[1] - 1] = {
+                        letter
+                        for letter in ALPHABET
+                        if valid_word(
+                            letter + tiles_to_str(self.find_string(coords, 0, 1))
+                        )
+                    }
+                if coords[1] + 1 < COLS:
+                    CROSS_CHECKS_DOWN[coords[0]][coords[1] + 1] = {
+                        letter
+                        for letter in ALPHABET
+                        if valid_word(
+                            tiles_to_str(self.find_string(coords, 0, -1))[::-1] + letter
+                        )
+                    }
+
+    def update_cross_checks_words(self):
+        """Updates the cross-check lists perpendicular to every word played"""
+        words = self.find_words()
+
+        for word in words:
+            row, col = 0, 0
+            if word[1].coords[0] - word[0].coords[0] == 0:
+                across = True
+                row = word[1].coords[0]
+            else:
+                across = False
+                col = word[1].coords[1]
+
+            if across:
+                if word[0].coords[1] - 1 > -1:
+                    CROSS_CHECKS_ACROSS[row][word[0].coords[1] - 1] = []
+                if word[-1].coords[1] + 1 < COLS:
+                    CROSS_CHECKS_ACROSS[row][word[-1].coords[1] + 1] = []
+            else:
+                if word[0].coords[0] - 1 > -1:
+                    CROSS_CHECKS_DOWN[word[0].coords[0] - 1][col] = []
+                if word[-1].coords[0] + 1 < ROWS:
+                    CROSS_CHECKS_DOWN[word[-1].coords[0] + 1][col] = []

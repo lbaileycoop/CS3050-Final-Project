@@ -1,7 +1,7 @@
 """Module containing the main function for running the scrabble game"""
 
 import arcade
-from modules import StartScreen, config, utils
+from modules import StartScreen, config
 
 
 def main():
