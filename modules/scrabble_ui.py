@@ -18,9 +18,13 @@ from .config import (
     BOARD_CENTER_Y,
 )
 from .tile import Tile
-from .board import EMPTY_TILES
-from .utils import to_coords
+from .drawbag import Drawbag
+from .player import Player
+from .board import Board, ORIGINAL_BOARD, EMPTY_TILES
+from .utils import from_coords, to_coords, get_possible_words
 from .game_manager import GameManager
+
+import random
 from .ai import AI
 
 
@@ -44,7 +48,7 @@ class ScrabbleUI(arcade.View):
         }
 
         # initialize game manager
-        self.game_manager = GameManager([("ai", "computer1"), ("ai", "computer2")])
+        self.game_manager = GameManager([("human", "player"), ("ai", "computer")])
 
         # For displaying the game history
         self.game_history = {}
@@ -513,7 +517,9 @@ K - 1         X - 1 \
 ------------------- \
 L - 4        Y - 2 \
 ------------------- \
-M - 2        Z - 1"
+M - 2        Z - 1 \
+------------------- \
+Blank - 2"
 
         offset = 20 * len(self.game_history[self.game_manager.get_player_list()[0]])
 
@@ -522,13 +528,14 @@ M - 2        Z - 1"
         self.text_objects = [
             arcade.Text(
                 turn_text,
-                self.other_sprites[2].center_x - 190,
+                self.other_sprites[2].center_x,
                 self.other_sprites[2].center_y - 75,
                 arcade.color.WHITE,
                 22,
-                380,
-                "center",
-                "Minecraft",
+                align="center",
+                anchor_x="center",
+                anchor_y="center",
+                font_name="Minecraft",
             ),
             arcade.Text(
                 "Scoreboard",
@@ -536,6 +543,9 @@ M - 2        Z - 1"
                 self.other_sprites[3].center_y + 240,
                 arcade.color.WHITE,
                 18,
+                align="center",
+                anchor_x="center",
+                anchor_y="center",
                 font_name="Minecraft",
             ),
             arcade.Text(
@@ -564,6 +574,9 @@ M - 2        Z - 1"
                 self.button_sprites.sprite_list[0].center_y - 6,
                 arcade.color.WHITE,
                 14,
+                align="center",
+                anchor_x="center",
+                anchor_y="center",
                 font_name="Minecraft",
             ),
             arcade.Text(
@@ -572,6 +585,9 @@ M - 2        Z - 1"
                 self.button_sprites.sprite_list[1].center_y - 6,
                 arcade.color.WHITE,
                 14,
+                align="center",
+                anchor_x="center",
+                anchor_y="center",
                 font_name="Minecraft",
             ),
             arcade.Text(
@@ -580,14 +596,20 @@ M - 2        Z - 1"
                 self.button_sprites.sprite_list[2].center_y - 6,
                 arcade.color.WHITE,
                 14,
+                align="center",
+                anchor_x="center",
+                anchor_y="center",
                 font_name="Minecraft",
             ),
             arcade.Text(
                 "Letter Distribution",
-                self.other_sprites[4].center_x - 100,
+                self.other_sprites[4].center_x,
                 self.other_sprites[4].center_y + 240,
                 arcade.color.WHITE,
                 18,
+                align="center",
+                anchor_x="center",
+                anchor_y="center",
                 font_name="Minecraft",
             ),
             arcade.Text(
@@ -595,14 +617,20 @@ M - 2        Z - 1"
                 self.other_sprites[4].center_x - 70,
                 self.other_sprites[4].center_y + 200,
                 arcade.color.WHITE,
-                14,
+                12.5,
+                align="center",
                 font_name="Minecraft",
-                width=140,
+                width=125,
                 multiline=True,
             ),
         ]
 
         # For displaying previous turn results
+        if len(self.game_history[self.game_manager.get_player_list()[0]]) > 10:
+            self.game_history[self.game_manager.get_player_list()[0]].pop(0)
+        if len(self.game_history[self.game_manager.get_player_list()[1]]) > 10:
+            self.game_history[self.game_manager.get_player_list()[1]].pop(0)
+
         for i in range(len(self.game_history[self.game_manager.get_player_list()[0]])):
             turn = self.game_history[self.game_manager.get_player_list()[0]][i]
             word, score = turn[0], turn[1]
