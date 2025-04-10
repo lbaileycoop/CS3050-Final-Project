@@ -3,13 +3,14 @@
 ## Scrabble Board Game
 For our final project, we've implemented Scrabble using pyarcade. It is singleplayer and keeps a scoreboard of the player vs the computer. 
 
-The rules of the game are as follows:
+### The rules of the game are as follows:
 - First turn must play at least 2 letters, one of which is on the center tiles
 - All subsequent turns can play any amount of tiles
 - All tiles played must be in only 1 row or column of the board
 - All tiles played must be orthogonally adjacent to another tile (tiles played on the same turn count)
 - All words created or added to on a turn must be valid (i.e. if a tile is placed and is adjacent to tiles on both the x and y axes, both axes must form a valid word
-### Bonus squares:
+
+__Bonus squares__:
 - Letter multipliers are calculated before word multipliers 
 - Center tile is a double word score
 - Covering multiple word multipliers in one word applies both 
@@ -27,7 +28,7 @@ The rules of the game are as follows:
 ### Table of contents:
 - main.py
 - modules: a folder of all python files needed to run the scrabble game:
-     - __init__.py : facilitates our imports
+     - init.py : facilitates our imports
      - ai_logic.py: creates and handles the AI object
      - board.py: creates the board and needed functions
      - condfig.py: creates and handles various config values
