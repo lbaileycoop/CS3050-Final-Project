@@ -35,8 +35,7 @@ class Tile:
 
     @classmethod
     def copy(cls, tile):
-        """Creates a tile with the same values as the passed tile,
-        but with coords set to None"""
+        """Creates a tile with the same initial values as the passed tile"""
         return cls(tile.letter, tile.value, tile.image_path)
 
     def collides_with_point(self, point) -> bool:
@@ -56,9 +55,6 @@ class Tile:
         """Removes chosen letter from blank tile"""
         self.letter = ""
         self.image_path = "./assets/images/clear.png"
-
-    def __str__(self):
-        return self.letter
 
 
 # Dictionary to define and store all tiles

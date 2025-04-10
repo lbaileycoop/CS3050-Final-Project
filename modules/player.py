@@ -26,6 +26,10 @@ class Player:
 
     def get_rack(self) -> Rack:
         """Getter function for the player's current rack"""
+        return self.rack
+
+    def get_rack_tiles(self) -> list[Tile]:
+        """Getter function for the player's current rack as a list of tiles"""
         return self.rack.get_rack()
 
     def set_rack(self, new_rack: Rack):

@@ -4,6 +4,7 @@ import random
 from .board import Board
 from .drawbag import Drawbag
 from .player import Player
+from .ai import AI
 
 
 class GameManager:
@@ -11,18 +12,24 @@ class GameManager:
     Class which contains several methods for controlling scrabble game flow
 
     Attributes:
-    player_list (list(Player)): The game's list of players
-    board (Board): The game's board state
-    drawbag (Drawbag): The game's drawbag
-    turn (int): The current turn, as an index of player_list
+        player_list (list(Player)): The game's list of players
+        board (Board): The game's board state
+        drawbag (Drawbag): The game's drawbag
+        turn (int): The current turn, as an index of player_list
     """
 
-    def __init__(self, player_list: list[Player], board: Board, drawbag: Drawbag):
+    def __init__(self, players: list[tuple[str, str]]):
         """Creates a GameManager object"""
-        self.player_list: list[Player] = player_list
-        self.board: Board = board
-        self.drawbag: Drawbag = drawbag
+        self.board: Board = Board()
+        self.drawbag: Drawbag = Drawbag()
         self.turn: int = -1
+
+        self.player_list: list[Player] = []
+        for player in players:
+            if player[0] == "ai":
+                self.player_list.append(AI(player[1], self.drawbag, self.board))
+            else:
+                self.player_list.append(Player(player[1], self.drawbag))
 
         self.initialize_game()
 
@@ -30,10 +37,9 @@ class GameManager:
         """Starts the scrabble game by choosing a random player to act first"""
         self.turn = random.randint(0, len(self.player_list) - 1)
 
-    def next_turn(self) -> Player:
-        """Switches the turn to the next player in rotation and returns the new player"""
+    def next_turn(self):
+        """Switches the turn to the next player in rotation"""
         self.turn = (self.turn + 1) % len(self.player_list)
-        return self.get_current_turn_player()
 
     def get_current_turn(self) -> int:
         """Getter function for the current turn as an integer"""
@@ -42,3 +48,15 @@ class GameManager:
     def get_current_turn_player(self) -> Player:
         """Getter function for the current turn as a Player"""
         return self.player_list[self.turn]
+
+    def get_drawbag(self) -> Drawbag:
+        """Getter function for the drawbag"""
+        return self.drawbag
+
+    def get_board(self) -> Board:
+        """Getter function for the board"""
+        return self.board
+
+    def get_player_list(self) -> list[Player]:
+        """Getter function for the list of players"""
+        return self.player_list

@@ -3,7 +3,6 @@ as well as the methods for maintaining cross-check-sets"""
 
 from .config import ROWS, COLS
 from .board import Board, EMPTY_TILES, CROSS_CHECKS_ACROSS, CROSS_CHECKS_DOWN
-from .rack import Rack
 from .tile import Tile
 from .utils import (
     tiles_to_str,
@@ -15,10 +14,19 @@ from .drawbag import Drawbag
 
 
 class AI(Player):
-    """TODO"""
+    """
+    Class representing the AI
 
-    def __init__(self, board: Board, drawbag: Drawbag):
-        super().__init__("Computer", drawbag)
+    Attributes:
+        board (Board): Contains the Board that the AI exists within
+        testing_board (list(list(Tile))): Contains a copy of the board that
+            the AI uses to test moves on
+        curr_cross_checks (list(list(set(str)))): Contains the cross check sets
+            for the current direction the AI is traversing while it searches
+    """
+
+    def __init__(self, name: str, drawbag: Drawbag, board: Board):
+        super().__init__(name, drawbag)
         self.board = board
         self.testing_board = []
         self.curr_cross_checks = []
@@ -86,11 +94,11 @@ class AI(Player):
                     and col + len(word) <= COLS
                     or tile in EMPTY_TILES
                 ):
-                    possible_moves += self.find_word(word, (row, col), [], [])
+                    possible_moves += self.find_move(word, (row, col), [], [])
 
         return possible_moves
 
-    def find_word(
+    def find_move(
         self,
         target: str,
         coords: tuple[int, int],
@@ -119,7 +127,7 @@ class AI(Player):
 
         if square not in EMPTY_TILES:
             if square.letter == next_letter:
-                return self.find_word(
+                return self.find_move(
                     target[1:],
                     self.next_coords(coords),
                     curr_move,
@@ -132,7 +140,7 @@ class AI(Player):
                 if next_letter == tile.letter:
                     curr_move.append((tile, coords))
                     remaining_rack.remove(tile)
-                    return self.find_word(
+                    return self.find_move(
                         target[1:],
                         self.next_coords(coords),
                         curr_move,
@@ -161,3 +169,23 @@ class AI(Player):
                 transposed_board[row].append(self.board.get_board()[col][row])
 
         return transposed_board
+
+    def choose_move(self):
+        """Chooses the highest scoring valid move and plays it into current tile"""
+        moves = self.find_moves()
+        valid_moves = {}
+        max_score = 0
+        max_move = None
+        for move in moves:
+            is_valid, score = self.board.test_turn(move)
+            if is_valid:
+                if score not in valid_moves:
+                    valid_moves[score] = []
+                valid_moves[score].append(move)
+                if score > max_score:
+                    max_score = score
+                    max_move = move
+
+        for tile in max_move:
+            self.rack.remove_tile(tile[0])
+            self.board.update_tile(tile[1][0], tile[1][1], tile[0])

@@ -20,7 +20,7 @@ class Drawbag:
     def add_tile(self, tile: Tile, quantity: int):
         """Function to add a tile to the draw bag"""
         for _ in range(quantity):
-            self.drawbag.append(tile)
+            self.drawbag.append(Tile.copy(tile))
 
     def initialize_drawbag(self):
         """Function to initialize the draw bag with the proper letter distribution"""
