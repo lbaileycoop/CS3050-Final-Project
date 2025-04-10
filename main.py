@@ -3,7 +3,6 @@
 import arcade
 from modules import StartScreen, config
 
-
 def main():
     """Method to run the scrabble game"""
     window = arcade.Window(

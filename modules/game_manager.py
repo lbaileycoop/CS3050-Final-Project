@@ -41,3 +41,10 @@ class GameManager:
     def get_current_turn_player(self) -> Player:
         """Getter function for the current turn as a Player"""
         return self.player_list[self.turn]
+    
+    def end_game(self):
+        """Ends the game and returns the winner"""
+        scores = [player.get_score() for player in self.player_list]
+        return scores
+       
+

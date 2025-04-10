@@ -761,9 +761,13 @@ class ScrabbleUI(arcade.View):
                                 self.bingo = True
                                 score += 50
 
+                                if self.drawbag.is_empty():
+                                    self.game_manager.end_game()
+
                             curr_player.add_score(score)
 
                             curr_player.refill_rack(self.drawbag)
+
                             self.update_rack_display()
 
                             self.game_manager.next_turn()
