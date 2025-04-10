@@ -44,7 +44,7 @@ class ScrabbleUI(arcade.View):
         }
 
         # initialize game manager
-        self.game_manager = GameManager([("human", "player"), ("ai", "computer")])
+        self.game_manager = GameManager([("ai", "computer1"), ("ai", "computer2")])
 
         # For displaying the game history
         self.game_history = {}

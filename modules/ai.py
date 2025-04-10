@@ -66,12 +66,18 @@ class AI(Player):
         """
         possible_moves: list[list[tuple[Tile, tuple[int, int]]]] = []
 
-        letters_in_row = tiles_to_str(
-            tile for tile in self.testing_board[row] if tile not in EMPTY_TILES
-        )
+        letters_in_row = []
+        letters_in_word = ""
+        for tile in self.testing_board[row]:
+            if tile not in EMPTY_TILES:
+                letters_in_word += tile.letter
+            else:
+                if letters_in_word != "":
+                    letters_in_row.append(letters_in_word)
+                letters_in_word = ""
 
         possible_words = find_permutations_recursive(
-            "".join(self.rack.get_rack_letters()) + letters_in_row, []
+            self.rack.get_rack_letters() + letters_in_row, []
         )
         feasable_words = possible_words
 
@@ -94,7 +100,9 @@ class AI(Player):
                     and col + len(word) <= COLS
                     or tile in EMPTY_TILES
                 ):
-                    possible_moves += self.find_move(word, (row, col), [], [])
+                    possible_moves += self.find_move(
+                        word, (row, col), [], [], self.get_rack_tiles()
+                    )
 
         return possible_moves
 
@@ -104,14 +112,9 @@ class AI(Player):
         coords: tuple[int, int],
         curr_move: list[tuple[Tile, tuple[int, int]]],
         possible_moves: list[list[tuple[Tile, tuple[int, int]]]],
+        remaining_rack: list[Tile],
     ):
         """Recursives traverses the row to the right to try and construct the target"""
-
-        remaining_rack = []
-
-        for tile in self.rack.get_rack():
-            if tile not in [move[0] for move in curr_move]:
-                remaining_rack.append(tile)
 
         if target == "":
             if curr_move not in possible_moves:
@@ -124,6 +127,7 @@ class AI(Player):
         square = self.testing_board[coords[0]][coords[1]]
         next_letter = target[0]
         curr_move = copy_list(curr_move)
+        remaining_rack = copy_list(remaining_rack)
 
         if square not in EMPTY_TILES:
             if square.letter == next_letter:
@@ -132,19 +136,26 @@ class AI(Player):
                     self.next_coords(coords),
                     curr_move,
                     possible_moves,
+                    remaining_rack,
                 )
             return possible_moves
 
         if next_letter in self.curr_cross_checks[coords[0]][coords[1]]:
             for tile in remaining_rack.copy():
-                if next_letter == tile.letter:
-                    curr_move.append((tile, coords))
+                if tile.letter in [next_letter, ""]:
+                    if tile.letter == "":
+                        new_tile = Tile.copy(tile)
+                        new_tile.set_blank(next_letter)
+                        curr_move.append((new_tile, coords))
+                    else:
+                        curr_move.append((tile, coords))
                     remaining_rack.remove(tile)
                     return self.find_move(
                         target[1:],
                         self.next_coords(coords),
                         curr_move,
                         possible_moves,
+                        remaining_rack,
                     )
         return possible_moves
 
@@ -187,5 +198,8 @@ class AI(Player):
                     max_move = move
 
         for tile in max_move:
-            self.rack.remove_tile(tile[0])
+            if tile[0].value == 0:
+                self.rack.remove_letter("")
+            else:
+                self.rack.remove_letter(tile[0].letter)
             self.board.update_tile(tile[1][0], tile[1][1], tile[0])

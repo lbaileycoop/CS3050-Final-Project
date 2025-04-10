@@ -66,26 +66,28 @@ def get_possible_words(input_string: str = "", num_free_letters: int = 0) -> lis
 
 
 def find_permutations_recursive(
-    remaining_letters: str, words: list[str], substr: str = ""
+    remaining_letters: list[str], words: list[str], substr: str = ""
 ):
     """
     Recursively navigates the dictionary by character
     to find all permutations of remaining_letters
     """
-    if valid_word(substr):
+    if valid_word(substr) and substr not in words:
         words.append(substr)
 
     if remaining_letters == "":
         return words
-    for letter in remaining_letters:
+    for i, letter in enumerate(remaining_letters):
         if DICTIONARY.has_subtrie(substr + letter):
             find_permutations_recursive(
-                remaining_letters.replace(letter, "", 1), words, substr + letter
+                remaining_letters[:i] + remaining_letters[i + 1 :],
+                words,
+                substr + letter,
             )
-        elif letter == "_":
+        elif letter == "":
             for edge in DICTIONARY.iterkeys(substr, True):
                 find_permutations_recursive(
-                    remaining_letters.replace("_", "", 1), words, substr + edge[0]
+                    remaining_letters.remove(letter), words, substr + edge[0]
                 )
 
     return words
