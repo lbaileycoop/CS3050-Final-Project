@@ -44,7 +44,7 @@ class ScrabbleUI(arcade.View):
         }
 
         # initialize game manager
-        self.game_manager = GameManager([("human", "Player"), ("ai", "Computer")])
+        self.game_manager = GameManager([("human", "player"), ("ai", "computer")])
 
         # For displaying the game history
         self.game_history = {}
@@ -515,9 +515,7 @@ L - 4        Y - 2 \
 ------------------- \
 M - 2        Z - 1"
 
-        offset = 20 * len(
-            self.game_history[self.game_manager.get_current_turn_player()]
-        )
+        offset = 20 * len(self.game_history[self.game_manager.get_player_list()[0]])
 
         turn_text = self.game_manager.get_current_turn_player().get_name() + "'s turn!"
 
@@ -541,7 +539,9 @@ M - 2        Z - 1"
                 font_name="Minecraft",
             ),
             arcade.Text(
-                f"Player: {self.game_manager.get_player_list()[0].get_score()}",
+                f"\
+{self.game_manager.get_player_list()[0].get_name()}: \
+{self.game_manager.get_player_list()[0].get_score()}",
                 self.other_sprites[3].center_x - 140,
                 self.other_sprites[3].center_y + 200,
                 arcade.color.WHITE,
@@ -549,7 +549,9 @@ M - 2        Z - 1"
                 font_name="Minecraft",
             ),
             arcade.Text(
-                f"Computer: {self.game_manager.get_player_list()[1].get_score()}",
+                f"\
+{self.game_manager.get_player_list()[1].get_name()}: \
+{self.game_manager.get_player_list()[1].get_score()}",
                 self.other_sprites[3].center_x - 140,
                 (self.other_sprites[3].center_y + 160) - offset,
                 arcade.color.WHITE,

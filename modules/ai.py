@@ -73,15 +73,15 @@ class AI(Player):
         possible_words = find_permutations_recursive(
             "".join(self.rack.get_rack_letters()) + letters_in_row, []
         )
-        feasable_words = []
+        feasable_words = possible_words
 
-        if letters_in_row != "":
-            for word in possible_words:
-                for letter in letters_in_row:
-                    if letter in word:
-                        feasable_words.append(word)
-        elif row == 7:
-            feasable_words = possible_words
+        # if letters_in_row != "":
+        #     for word in possible_words:
+        #         for letter in letters_in_row:
+        #             if letter in word:
+        #                 feasable_words.append(word)
+        # elif row == 7:
+        #     feasable_words = possible_words
 
         for word in feasable_words:
             first_letter = word[0]
