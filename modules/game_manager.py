@@ -64,3 +64,8 @@ class GameManager:
     def get_player_list(self) -> list[Player]:
         """Getter function for the list of players"""
         return self.player_list
+
+    def end_game(self):
+        """Ends the game and returns the winner"""
+        scores = [player.get_score() for player in self.player_list]
+        return scores

@@ -115,8 +115,39 @@ class ScrabbleUI(arcade.View):
         self.button_sprites.append(reset_button)
         self.button_sprites.append(trade_in_button)
 
+        # For displaying pop up messages
+        self.popup = arcade.SpriteList()
+
+        self.box = arcade.Sprite("./assets/images/turn_display.png")
+        self.box.size = (WINDOW_WIDTH // 3, WINDOW_HEIGHT // 3)
+        self.box.center_x = BOARD_CENTER_X
+        self.box.center_y = BOARD_CENTER_Y
+
+        self.popup.append(self.box)
+
+        self.done_button = arcade.SpriteList()
+        self._done_button = arcade.Sprite("./assets/images/trade_in_button.png")
+        self._done_button.center_x = BOARD_CENTER_X
+        self._done_button.center_y = BOARD_CENTER_Y - 100
+        self.done_button.append(self._done_button)
+
+        # Prompt user to select a letter for the blank tile
+        self.blank_tile_prompt = False
+        self.blank_tile_position = None
+
+        # Create a temporary text input
+        self.letter_input = ""
+        self.text_input_active = False
+
+        """ Sprites creation for graphics """
+        # displays the current board state
+        self.board_sprites: arcade.SpriteList = arcade.SpriteList()
+
+        # displays player's rack
+        self.rack_sprites: arcade.SpriteList = arcade.SpriteList()
+
         # displays background sprites
-        self.background_sprites: arcade.SpriteList = arcade.SpriteList()
+        self.background_sprites = arcade.SpriteList()
 
         window_background = arcade.Sprite(
             backgrounds[bg], center_x=WINDOW_WIDTH // 2, center_y=WINDOW_HEIGHT // 2
