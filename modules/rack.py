@@ -65,4 +65,5 @@ class Rack:
                 break
 
     def is_empty(self) -> bool:
+        """Returns whether the rack is empty"""
         return len(self.rack) == 0
