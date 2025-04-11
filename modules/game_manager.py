@@ -18,7 +18,7 @@ class GameManager:
         turn (int): The current turn, as an index of player_list
     """
 
-    def __init__(self, players: list[tuple[str, str]]):
+    def __init__(self, players: list[tuple[str, str] | tuple[str, str, int]]):
         """Creates a GameManager object"""
         self.board: Board = Board()
         self.drawbag: Drawbag = Drawbag()
@@ -27,9 +27,13 @@ class GameManager:
         self.player_list: list[Player] = []
         for player in players:
             if player[0] == "ai":
-                self.player_list.append(AI(player[1], self.drawbag, self.board))
-            else:
+                self.player_list.append(
+                    AI(player[1], self.drawbag, self.board, player[2])
+                )
+            elif player[0] == "human":
                 self.player_list.append(Player(player[1], self.drawbag))
+            else:
+                print('invalid player type! should be "human" or "ai"')
 
         self.initialize_game()
 

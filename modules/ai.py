@@ -22,13 +22,19 @@ class AI(Player):
             the AI uses to test moves on
         curr_cross_checks (list(list(set(str)))): Contains the cross check sets
             for the current direction the AI is traversing while it searches
+        personality (int): Which algorithm the AI uses to choose a move
+            0 = Most points
+            1 = Most words
+            2 = Most tiles
+            3 = Longest word
     """
 
-    def __init__(self, name: str, drawbag: Drawbag, board: Board):
+    def __init__(self, name: str, drawbag: Drawbag, board: Board, personality: int = 0):
         super().__init__(name, drawbag)
         self.board = board
         self.testing_board = []
         self.curr_cross_checks = []
+        self.personality = personality
 
     def find_moves(
         self,
@@ -186,22 +192,40 @@ class AI(Player):
         moves = self.find_moves()
         valid_moves = {}
         max_score = 0
-        max_move = None
+        max_words = 0
+        max_tiles = 0
+        max_word_len = 0
+        chosen_moves = [None, None, None, None]
         for move in moves:
-            is_valid, score = self.board.test_turn(move)
+            is_valid, words = self.board.test_turn(move)
+
             if is_valid:
+                score = sum(words.values())
                 if score not in valid_moves:
                     valid_moves[score] = []
                 valid_moves[score].append(move)
+
                 if score > max_score:
                     max_score = score
-                    max_move = move
+                    chosen_moves[0] = move
+                if len(words) > max_words:
+                    max_words = len(words)
+                    chosen_moves[1] = move
+                if len(move) > max_tiles:
+                    max_tiles = len(move)
+                    chosen_moves[2] = move
+                for word in words.keys():
+                    if len(word) > max_word_len:
+                        max_word_len = len(word)
+                        chosen_moves[3] = move
 
-        if max_move is None:
+        chosen_move = chosen_moves[self.personality]
+
+        if chosen_move is None:
             print("No moves found")
             return False
 
-        for tile in max_move:
+        for tile in chosen_move:
             if tile[0].value == 0:
                 self.rack.remove_letter("")
             else:

@@ -148,7 +148,7 @@ class Board:
 
         self.clear_current_turn_tiles()
 
-        return legal_turn, sum(words_dict.values())
+        return legal_turn, words_dict
 
     def score_words(self, words: list[list[Tile]]) -> dict[str, int]:
         """Returns a dict matching every word in words to its score"""
