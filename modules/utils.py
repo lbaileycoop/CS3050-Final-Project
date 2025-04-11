@@ -3,18 +3,18 @@
 from typing import Tuple
 from itertools import permutations, combinations
 
-from .config import ROWS, COLS, DICTIONARY, ALPHABET
+from .config import SIZE, DICTIONARY, ALPHABET
 from .tile import Tile
 
 
 def to_coords(index: int) -> Tuple[int, int]:
     """Returns the x and y values of a tile based on the 1-d index"""
-    return (index % COLS, (index // COLS))
+    return (index % SIZE, (index // SIZE))
 
 
 def from_coords(x: int, y: int) -> Tuple[int, int]:
     """Returns the 1-d index of a tile based on the x and y values"""
-    return x + ((ROWS - y) * COLS)
+    return x + ((SIZE - y) * SIZE)
 
 
 def valid_word(word: str) -> bool:

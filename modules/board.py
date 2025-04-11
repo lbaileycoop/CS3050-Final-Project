@@ -1,7 +1,7 @@
 """Module containing the definition for a Board object"""
 
 from .tile import Tile, TILES
-from .config import ALPHABET, ROWS, COLS
+from .config import ALPHABET, SIZE
 from .utils import valid_word, tiles_to_str, copy_list
 
 TW = TILES["triple_word"]
@@ -31,8 +31,8 @@ ORIGINAL_BOARD = [
     [TW, BA, BA, DL, BA, BA, BA, TW, BA, BA, BA, DL, BA, BA, TW],
 ]
 
-CROSS_CHECKS_ACROSS = [[ALPHABET for _ in range(COLS)] for _ in range(ROWS)]
-CROSS_CHECKS_DOWN = [[ALPHABET for _ in range(ROWS)] for _ in range(COLS)]
+CROSS_CHECKS_ACROSS = [[ALPHABET for _ in range(SIZE)] for _ in range(SIZE)]
+CROSS_CHECKS_DOWN = [[ALPHABET for _ in range(SIZE)] for _ in range(SIZE)]
 
 
 class Board:
@@ -338,7 +338,7 @@ class Board:
                         )
                     }
 
-                if coords[0] + 1 < ROWS:
+                if coords[0] + 1 < SIZE:
                     CROSS_CHECKS_ACROSS[coords[0] + 1][coords[1]] = {
                         letter
                         for letter in ALPHABET
@@ -358,7 +358,7 @@ class Board:
                             letter + tiles_to_str(self.find_string(coords, 0, 1))
                         )
                     }
-                if coords[1] + 1 < COLS:
+                if coords[1] + 1 < SIZE:
                     CROSS_CHECKS_DOWN[coords[0]][coords[1] + 1] = {
                         letter
                         for letter in ALPHABET
@@ -383,10 +383,10 @@ class Board:
             if across:
                 if word[0].coords[1] - 1 > -1:
                     CROSS_CHECKS_ACROSS[row][word[0].coords[1] - 1] = []
-                if word[-1].coords[1] + 1 < COLS:
+                if word[-1].coords[1] + 1 < SIZE:
                     CROSS_CHECKS_ACROSS[row][word[-1].coords[1] + 1] = []
             else:
                 if word[0].coords[0] - 1 > -1:
                     CROSS_CHECKS_DOWN[word[0].coords[0] - 1][col] = []
-                if word[-1].coords[0] + 1 < ROWS:
+                if word[-1].coords[0] + 1 < SIZE:
                     CROSS_CHECKS_DOWN[word[-1].coords[0] + 1][col] = []

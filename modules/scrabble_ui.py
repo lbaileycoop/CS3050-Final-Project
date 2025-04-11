@@ -2,8 +2,7 @@
 
 from .config import (
     arcade,
-    ROWS,
-    COLS,
+    SIZE,
     TILE_SIZE,
     TILE_GAP,
     BORDER_Y,
@@ -44,7 +43,7 @@ class ScrabbleUI(arcade.View):
         }
 
         # initialize game manager
-        self.game_manager = GameManager([("human", "computer1"), ("ai", "computer2")])
+        self.game_manager = GameManager([("ai", "computer1"), ("ai", "computer2")])
 
         # For displaying the game history
         self.game_history = {}
@@ -58,6 +57,7 @@ class ScrabbleUI(arcade.View):
 
         self.bingo = False
         self.trade_in_active = False
+        self.tiles_to_trade = []
 
         # For displaying pop up messages
         self.popup = arcade.SpriteList()
@@ -197,7 +197,10 @@ class ScrabbleUI(arcade.View):
             self.held_tile.sprite.center_x = x
             self.held_tile.sprite.center_y = y
             # Adjust scale based on whether tile is over the board
-            if self.other_sprites[1].collides_with_point((x, y)):
+            if (
+                self.other_sprites[1].collides_with_point((x, y))
+                and not self.trade_in_active
+            ):
                 self.held_tile.sprite.scale = 0.63
             else:
                 self.held_tile.sprite.scale = 1.2
@@ -230,10 +233,7 @@ class ScrabbleUI(arcade.View):
             self.game_manager.get_current_turn_player().refill_rack(
                 self.game_manager.get_drawbag()
             )
-            self.trade_in_active = False
-            self.game_manager.next_turn()
             self.next_turn()
-            self.update_displays()
 
     def on_mouse_release(self, x, y, button, modifiers):
         """
@@ -295,6 +295,7 @@ class ScrabbleUI(arcade.View):
                     self.game_manager.get_current_turn_player().get_rack().remove_tile(
                         self.held_tile
                     )
+                    self.tiles_to_trade.append(self.held_tile)
                     self.update_rack_display()
                     placed = True
 
@@ -353,7 +354,7 @@ class ScrabbleUI(arcade.View):
                 font_name="Minecraft",
             ).draw()
             arcade.Text(
-                "(Press a letter key or ESC to cancel)",
+                "(Press any letter key)",
                 BOARD_CENTER_X,
                 BOARD_CENTER_Y - 25,
                 arcade.color.WHITE,
@@ -405,7 +406,24 @@ class ScrabbleUI(arcade.View):
             arcade.Text(
                 "Drag tiles here to trade in.",
                 BOARD_CENTER_X,
-                BOARD_CENTER_Y + 25,
+                BOARD_CENTER_Y + 30,
+                arcade.color.WHITE,
+                16,
+                align="center",
+                anchor_x="center",
+                anchor_y="center",
+                font_name="Minecraft",
+            ).draw()
+            arcade.Text(
+                "Tiles chosen: "
+                + ", ".join(
+                    [
+                        ("blank" if tile.letter == "" else tile.letter)
+                        for tile in self.tiles_to_trade
+                    ]
+                ),
+                BOARD_CENTER_X,
+                BOARD_CENTER_Y,
                 arcade.color.WHITE,
                 16,
                 align="center",
@@ -416,7 +434,7 @@ class ScrabbleUI(arcade.View):
             arcade.Text(
                 "(Press ESC to cancel)",
                 BOARD_CENTER_X,
-                BOARD_CENTER_Y - 25,
+                BOARD_CENTER_Y - 30,
                 arcade.color.WHITE,
                 16,
                 align="center",
@@ -456,15 +474,13 @@ class ScrabbleUI(arcade.View):
                 del self.blank_tile_position
                 return
 
-            if symbol == arcade.key.ESCAPE:
-                self.text_input_active = False
-                del self.blank_tile_prompt
-                del self.blank_tile_position
-                return
-
         if self.trade_in_active:
             if symbol == arcade.key.ESCAPE:
                 self.trade_in_active = False
+                self.game_manager.get_current_turn_player().add_tiles(
+                    self.tiles_to_trade
+                )
+                self.tiles_to_trade.clear()
                 self.reset_turn()
                 return
 
@@ -492,8 +508,6 @@ class ScrabbleUI(arcade.View):
                     (word, points)
                 )
 
-            self.game_manager.next_turn()
-            self.update_displays()
             self.next_turn()
         else:
             self.reset_turn()
@@ -518,6 +532,7 @@ class ScrabbleUI(arcade.View):
 
     def trade_in(self):
         """Trade in any number (incl. 0) of tiles for new ones and end your turn"""
+        self.reset_turn()
         self.trade_in_active = True
 
     def computer_turn(self):
@@ -525,15 +540,20 @@ class ScrabbleUI(arcade.View):
         Calls the appropriate methods for an AI
         to choose and then play a turn
         """
-        self.game_manager.get_current_turn_player().choose_move()
-
-        self.play_turn()
+        if self.game_manager.get_current_turn_player().choose_move():
+            self.play_turn()
+        else:
+            self.next_turn()
 
     def next_turn(self):
         """
         Either schedules a computer turn or allows the
         player to play based on curr_player
         """
+        self.trade_in_active = False
+        self.tiles_to_trade.clear()
+        self.game_manager.next_turn()
+        self.update_displays()
         if isinstance(self.game_manager.get_current_turn_player(), AI):
             arcade.schedule_once(lambda _: self.computer_turn(), 0.1)
 
@@ -559,8 +579,8 @@ class ScrabbleUI(arcade.View):
 
         # Create new sprites for each tile on the board
         current_board = self.game_manager.get_board().get_board()
-        for row in range(ROWS):
-            for col in range(COLS):
+        for row in range(SIZE):
+            for col in range(SIZE):
                 _tile = current_board[row][col]
                 tile = Tile(_tile.letter, _tile.value, _tile.image_path)
 
@@ -593,33 +613,23 @@ class ScrabbleUI(arcade.View):
         self.text_objects = []
 
         letter_dist = "\
-A - 9        N - 6 \
-------------------- \
-B - 2        O - 8 \
-------------------- \
-C - 2        P - 2 \
-------------------- \
-D - 4        Q - 1 \
-------------------- \
-E - 12      R - 6 \
-------------------- \
-F - 2        S - 4 \
-------------------- \
-G - 3        T - 6 \
-------------------- \
-H - 2        U - 4 \
-------------------- \
-I - 9         V - 2 \
-------------------- \
-J - 1         W - 2 \
-------------------- \
-K - 1         X - 1 \
-------------------- \
-L - 4        Y - 2 \
-------------------- \
-M - 2        Z - 1 \
-------------------- \
-Blank - 2"
+A - 9     J - 1     S - 4  \
+--------------------------- \
+ B - 2     K - 1     T - 6 \
+--------------------------- \
+ C - 2     L - 4     U - 4 \
+--------------------------- \
+ D - 4     M - 2     V - 2 \
+--------------------------- \
+ E - 12    N - 6     W - 2 \
+--------------------------- \
+ F - 2     O - 8     X - 1 \
+--------------------------- \
+ G - 3     P - 2     Y - 2 \
+--------------------------- \
+ H - 2     Q - 1     Z - 1 \
+--------------------------- \
+ I - 9   R - 6   Blank - 2"
 
         offset = 20 * len(self.game_history[self.game_manager.get_player_list()[0]])
 
@@ -670,7 +680,7 @@ Blank - 2"
             ),
             arcade.Text(
                 "Play Word",
-                BUTTON_X - 42,
+                BUTTON_X,
                 self.button_sprites.sprite_list[0].center_y - 6,
                 arcade.color.WHITE,
                 14,
@@ -681,7 +691,7 @@ Blank - 2"
             ),
             arcade.Text(
                 "Reset",
-                BUTTON_X - 25,
+                BUTTON_X,
                 self.button_sprites.sprite_list[1].center_y - 6,
                 arcade.color.WHITE,
                 14,
@@ -692,7 +702,7 @@ Blank - 2"
             ),
             arcade.Text(
                 "Trade In",
-                BUTTON_X - 42,
+                BUTTON_X,
                 self.button_sprites.sprite_list[2].center_y - 6,
                 arcade.color.WHITE,
                 14,
@@ -714,13 +724,13 @@ Blank - 2"
             ),
             arcade.Text(
                 letter_dist,
-                self.other_sprites[4].center_x - 70,
+                self.other_sprites[4].center_x - 100,
                 self.other_sprites[4].center_y + 200,
                 arcade.color.WHITE,
-                12.5,
+                14,
                 align="center",
                 font_name="Minecraft",
-                width=125,
+                width=205,
                 multiline=True,
             ),
         ]
@@ -762,7 +772,7 @@ Blank - 2"
     def get_board_position(self, row, col):
         """Calculate the screen position for a board tile at the given row and column."""
         x = col * (TILE_SIZE + TILE_GAP) + BOARD_START_X
-        y = (ROWS - 1 - row) * (TILE_SIZE + TILE_GAP) + BOARD_START_Y
+        y = (SIZE - 1 - row) * (TILE_SIZE + TILE_GAP) + BOARD_START_Y
         return x, y
 
     def get_rack_position(self, tile_index):
