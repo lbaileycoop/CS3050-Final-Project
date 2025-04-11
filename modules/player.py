@@ -52,3 +52,7 @@ class Player:
         """Adds tiles to the rack from a passed list of tiles"""
         for tile in tiles:
             self.rack.add_tile(Tile.copy(tile))
+
+    def rack_is_empty(self) -> bool:
+        """Returns whether the player's rack is empty"""
+        return self.rack.is_empty()

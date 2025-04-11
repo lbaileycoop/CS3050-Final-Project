@@ -56,6 +56,10 @@ class Tile:
         self.letter = ""
         self.image_path = "./assets/images/clear.png"
 
+    def get_value(self) -> int:
+        """Getter function for value"""
+        return self.value
+
 
 # Dictionary to define and store all tiles
 TILES = {

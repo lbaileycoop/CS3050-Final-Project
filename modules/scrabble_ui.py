@@ -1,5 +1,6 @@
 """Module containing the definition for a ScrabbleUI object"""
 
+import random
 from .config import (
     arcade,
     SIZE,
@@ -43,7 +44,9 @@ class ScrabbleUI(arcade.View):
         }
 
         # initialize game manager
-        self.game_manager = GameManager([("human", "player"), ("ai", "computer", 0)])
+        self.game_manager = GameManager(
+            [("human", "player 1", 0), ("ai", "player 2", 0)]
+        )
 
         # For displaying the game history
         self.game_history = {}
@@ -58,6 +61,8 @@ class ScrabbleUI(arcade.View):
         self.bingo = False
         self.trade_in_active = False
         self.tiles_to_trade = []
+
+        self.skip_count = 0
 
         # For displaying pop up messages
         self.popup = arcade.SpriteList()
@@ -93,10 +98,23 @@ class ScrabbleUI(arcade.View):
         # displays buttons
         self.button_sprites: arcade.SpriteList = arcade.SpriteList()
 
+        play_word_button = arcade.Sprite(
+            "./assets/images/play_word_button.png",
+            center_x=BUTTON_X,
+            center_y=BORDER_Y * 1.1,
+        )
+
         reset_button = arcade.Sprite(
             "./assets/images/reset_button.png",
             center_x=BUTTON_X,
-            center_y=BORDER_Y * 0.8,
+            center_y=BORDER_Y * 0.9,
+        )
+
+        # TODO: Chane path to shuffle rack button when file exists
+        shuffle_rack_button = arcade.Sprite(
+            "./assets/images/trade_in_button.png",
+            center_x=BUTTON_X,
+            center_y=BORDER_Y * 0.7,
         )
 
         trade_in_button = arcade.Sprite(
@@ -105,14 +123,9 @@ class ScrabbleUI(arcade.View):
             center_y=BORDER_Y * 0.5,
         )
 
-        play_word_button = arcade.Sprite(
-            "./assets/images/play_word_button.png",
-            center_x=BUTTON_X,
-            center_y=BORDER_Y * 1.1,
-        )
-
         self.button_sprites.append(play_word_button)
         self.button_sprites.append(reset_button)
+        self.button_sprites.append(shuffle_rack_button)
         self.button_sprites.append(trade_in_button)
 
         # For displaying pop up messages
@@ -211,7 +224,13 @@ class ScrabbleUI(arcade.View):
                 _, original_y = self.get_rack_position(i)
                 sprite.center_y = original_y
 
-        image_names = ["play_word_button", "reset_button", "trade_in_button"]
+        # TODO: Chane index 2 to shuffle rack button when file exists
+        image_names = [
+            "play_word_button",
+            "reset_button",
+            "trade_in_button",
+            "trade_in_button",
+        ]
         # Change button colors to indicate player hovering over them
         for i, sprite in enumerate(self.button_sprites):
             if sprite.collides_with_point((x, y)):
@@ -258,12 +277,20 @@ class ScrabbleUI(arcade.View):
                     elif i == 1:
                         self.reset_turn()
                     elif i == 2:
+                        self.shuffle_rack()
+                    elif i == 3:
                         self.trade_in()
         elif self._done_button.collides_with_point((x, y)):
             self.game_manager.get_current_turn_player().refill_rack(
                 self.game_manager.get_drawbag()
             )
-            self.next_turn()
+            if len(self.tiles_to_trade) == 0:
+                self.skip_count += 1
+
+            if self.skip_count == len(self.game_manager.get_player_list()) * 2:
+                self.end_game()
+            else:
+                self.next_turn()
 
     def on_mouse_release(self, x, y, button, modifiers):
         """
@@ -373,6 +400,7 @@ class ScrabbleUI(arcade.View):
         self.rack_sprites.draw()
 
     def draw_popups(self):
+        """Draws any popups which are currently active"""
         # Draw blank tile prompt if active
         if hasattr(self, "text_input_active") and self.text_input_active:
             self.popup.draw()
@@ -533,16 +561,22 @@ class ScrabbleUI(arcade.View):
 
             self.game_manager.get_current_turn_player().add_score(score)
 
-            self.game_manager.get_current_turn_player().refill_rack(
-                self.game_manager.get_drawbag()
-            )
-
             for word, points in words.items():
                 self.game_history[self.game_manager.get_current_turn_player()].append(
                     (word, points)
                 )
 
-            self.next_turn()
+            if (
+                self.game_manager.get_drawbag().is_empty()
+                and self.game_manager.get_current_turn_player().rack_is_empty()
+            ):
+                self.end_game()
+            else:
+                self.game_manager.get_current_turn_player().refill_rack(
+                    self.game_manager.get_drawbag()
+                )
+
+                self.next_turn()
         else:
             self.reset_turn()
 
@@ -577,7 +611,16 @@ class ScrabbleUI(arcade.View):
         if self.game_manager.get_current_turn_player().choose_move():
             self.play_turn()
         else:
-            self.next_turn()
+            self.skip_count += 1
+            if self.skip_count == len(self.game_manager.get_player_list()) * 2:
+                self.end_game()
+            else:
+                self.next_turn()
+
+    def shuffle_rack(self):
+        """Shuffles the current player's rack"""
+        random.shuffle(self.game_manager.get_current_turn_player().get_rack_tiles())
+        self.update_displays()
 
     def next_turn(self):
         """
@@ -735,9 +778,20 @@ A - 9     J - 1     S - 4  \
                 font_name="Minecraft",
             ),
             arcade.Text(
-                "Trade In",
+                "Shuffle",
                 BUTTON_X,
                 self.button_sprites.sprite_list[2].center_y - 6,
+                arcade.color.WHITE,
+                14,
+                align="center",
+                anchor_x="center",
+                anchor_y="center",
+                font_name="Minecraft",
+            ),
+            arcade.Text(
+                "Trade In",
+                BUTTON_X,
+                self.button_sprites.sprite_list[3].center_y - 6,
                 arcade.color.WHITE,
                 14,
                 align="center",
@@ -814,3 +868,10 @@ A - 9     J - 1     S - 4  \
         x = BOARD_START_X + (RACK_TILE_SPACING * tile_index)
         y = self.background_sprites[5].center_y
         return x, y
+
+    def end_game(self):
+        """Ends the game"""
+        self.update_displays()
+        final_scores = self.game_manager.end_game()
+        print(final_scores)
+        arcade.close_window()

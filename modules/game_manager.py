@@ -25,6 +25,7 @@ class GameManager:
         self.turn: int = -1
 
         self.player_list: list[Player] = []
+
         for player in players:
             if player[0] == "ai":
                 self.player_list.append(
@@ -67,5 +68,22 @@ class GameManager:
 
     def end_game(self):
         """Ends the game and returns the winner"""
-        scores = [player.get_score() for player in self.player_list]
+        scores = {}
+
+        unplayed_value = 0
+        emptied_players: list[str] = []
+
+        for player in self.player_list:
+            score = player.get_score()
+            for tile in player.get_rack_tiles():
+                score -= tile.get_value()
+                unplayed_value += tile.get_value()
+            if player.rack_is_empty():
+                emptied_players.append(player.get_name())
+            scores[player.get_name()] = score
+
+        for player in emptied_players:
+            scores[player] += unplayed_value
+        scores = {player.get_name(): player.get_score() for player in self.player_list}
+
         return scores

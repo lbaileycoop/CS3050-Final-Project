@@ -63,3 +63,6 @@ class Rack:
             if tile.letter == letter:
                 self.remove_tile(tile)
                 break
+
+    def is_empty(self) -> bool:
+        return len(self.rack) == 0
