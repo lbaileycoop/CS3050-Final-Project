@@ -96,8 +96,8 @@ class AI(Player):
                     and col + len(word) <= SIZE
                     or tile in EMPTY_TILES
                 ):
-                    self.find_move(
-                        word, (row, col), [], possible_moves, self.get_rack_tiles()
+                    possible_moves += self.find_move(
+                        word, (row, col), [], [], self.get_rack_tiles()
                     )
 
         return possible_moves
@@ -115,10 +115,10 @@ class AI(Player):
         if target == "":
             if curr_move not in (possible_moves + []):
                 possible_moves.append(curr_move)
-            return None
+            return possible_moves
 
         if coords is None:
-            return None
+            return possible_moves
 
         square = self.testing_board[coords[0]][coords[1]]
         next_letter = target[0]
@@ -134,7 +134,7 @@ class AI(Player):
                     possible_moves,
                     remaining_rack,
                 )
-            return None
+            return possible_moves
 
         if next_letter in self.curr_cross_checks[coords[0]][coords[1]]:
             for tile in remaining_rack.copy():
@@ -153,6 +153,7 @@ class AI(Player):
                         possible_moves,
                         remaining_rack,
                     )
+        return possible_moves
 
     def next_coords(self, coords: tuple[int, int]) -> tuple[int, int] | None:
         """
