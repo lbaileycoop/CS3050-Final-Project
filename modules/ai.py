@@ -5,7 +5,6 @@ from .config import ROWS, COLS
 from .board import Board, EMPTY_TILES, CROSS_CHECKS_ACROSS, CROSS_CHECKS_DOWN
 from .tile import Tile
 from .utils import (
-    tiles_to_str,
     find_permutations_recursive,
     copy_list,
 )
