@@ -43,7 +43,7 @@ class ScrabbleUI(arcade.View):
         }
 
         # initialize game manager
-        self.game_manager = GameManager([("ai", "computer1"), ("ai", "computer2")])
+        self.game_manager = GameManager([("human", "player"), ("ai", "computer")])
 
         # For displaying the game history
         self.game_history = {}
@@ -90,12 +90,6 @@ class ScrabbleUI(arcade.View):
         # displays player's rack
         self.rack_sprites: arcade.SpriteList = arcade.SpriteList()
 
-        rack_graphic = arcade.Sprite("./assets/images/rack.png")
-        rack_graphic.center_x = WINDOW_WIDTH // 2
-        rack_graphic.center_y = BORDER_Y * 0.8
-
-        self.rack_sprites.append(rack_graphic)
-
         # displays buttons
         self.button_sprites: arcade.SpriteList = arcade.SpriteList()
 
@@ -121,8 +115,8 @@ class ScrabbleUI(arcade.View):
         self.button_sprites.append(reset_button)
         self.button_sprites.append(trade_in_button)
 
-        # displays miscellaneous graphics
-        self.other_sprites: arcade.SpriteList = arcade.SpriteList()
+        # displays background sprites
+        self.background_sprites: arcade.SpriteList = arcade.SpriteList()
 
         window_background = arcade.Sprite(
             backgrounds[bg], center_x=WINDOW_WIDTH // 2, center_y=WINDOW_HEIGHT // 2
@@ -154,11 +148,16 @@ class ScrabbleUI(arcade.View):
             center_y=WINDOW_HEIGHT * 0.58,
         )
 
-        self.other_sprites.append(window_background)
-        self.other_sprites.append(board_background)
-        self.other_sprites.append(turn_display)
-        self.other_sprites.append(scoreboard_background)
-        self.other_sprites.append(letter_dist_background)
+        rack_background = arcade.Sprite("./assets/images/rack.png")
+        rack_background.center_x = WINDOW_WIDTH // 2
+        rack_background.center_y = BORDER_Y * 0.8
+
+        self.background_sprites.append(window_background)
+        self.background_sprites.append(board_background)
+        self.background_sprites.append(turn_display)
+        self.background_sprites.append(scoreboard_background)
+        self.background_sprites.append(letter_dist_background)
+        self.background_sprites.append(rack_background)
 
         # Displays all text
         self.text_objects = []
@@ -173,13 +172,13 @@ class ScrabbleUI(arcade.View):
         """
 
         # Make tiles move up slightly to indicate the player hovering over them
-        for idx in range(1, len(self.rack_sprites)):
-            if self.rack_sprites[idx].collides_with_point((x, y)):
-                new_y = self.get_rack_position(idx)[1] + 20
-                self.rack_sprites[idx].center_y = new_y
+        for i, sprite in enumerate(self.rack_sprites):
+            if sprite.collides_with_point((x, y)):
+                new_y = self.get_rack_position(i)[1] + 20
+                sprite.center_y = new_y
             else:
-                _, original_y = self.get_rack_position(idx)
-                self.rack_sprites[idx].center_y = original_y
+                _, original_y = self.get_rack_position(i)
+                sprite.center_y = original_y
 
         image_names = ["play_word_button", "reset_button", "trade_in_button"]
         # Change button colors to indicate player hovering over them
@@ -198,7 +197,7 @@ class ScrabbleUI(arcade.View):
             self.held_tile.sprite.center_y = y
             # Adjust scale based on whether tile is over the board
             if (
-                self.other_sprites[1].collides_with_point((x, y))
+                self.background_sprites[1].collides_with_point((x, y))
                 and not self.trade_in_active
             ):
                 self.held_tile.sprite.scale = 0.63
@@ -331,14 +330,18 @@ class ScrabbleUI(arcade.View):
         self.clear()
 
         # Call draw() on all sprite lists below
-        self.other_sprites.draw()
+        self.background_sprites.draw()
         self.board_sprites.draw()
-        self.rack_sprites.draw()
         self.button_sprites.draw()
 
         for text_object in self.text_objects:
             text_object.draw()
 
+        self.draw_popups()
+
+        self.rack_sprites.draw()
+
+    def draw_popups(self):
         # Draw blank tile prompt if active
         if hasattr(self, "text_input_active") and self.text_input_active:
             self.popup.draw()
@@ -593,8 +596,8 @@ class ScrabbleUI(arcade.View):
     def update_rack_display(self):
         """Update the visual representation of the rack to match the player's rack"""
         # Clear existing rack tiles and positions (except rack graphic)
-        for _ in range(1, len(self.rack_sprites)):
-            self.rack_sprites.pop(1)
+        while not len(self.rack_sprites) == 0:
+            self.rack_sprites.pop()
 
         if not isinstance(self.game_manager.get_current_turn_player(), AI):
             for i, tile in enumerate(
@@ -615,21 +618,21 @@ class ScrabbleUI(arcade.View):
         letter_dist = "\
 A - 9     J - 1     S - 4  \
 --------------------------- \
- B - 2     K - 1     T - 6 \
+    B - 2     K - 1     T - 6 \
 --------------------------- \
- C - 2     L - 4     U - 4 \
+    C - 2     L - 4     U - 4 \
 --------------------------- \
- D - 4     M - 2     V - 2 \
+    D - 4     M - 2     V - 2 \
 --------------------------- \
- E - 12    N - 6     W - 2 \
+    E - 12    N - 6     W - 2 \
 --------------------------- \
- F - 2     O - 8     X - 1 \
+    F - 2     O - 8     X - 1 \
 --------------------------- \
- G - 3     P - 2     Y - 2 \
+    G - 3     P - 2     Y - 2 \
 --------------------------- \
- H - 2     Q - 1     Z - 1 \
+    H - 2     Q - 1     Z - 1 \
 --------------------------- \
- I - 9   R - 6   Blank - 2"
+    I - 9   R - 6   Blank - 2"
 
         offset = 20 * len(self.game_history[self.game_manager.get_player_list()[0]])
 
@@ -638,8 +641,8 @@ A - 9     J - 1     S - 4  \
         self.text_objects = [
             arcade.Text(
                 turn_text,
-                self.other_sprites[2].center_x,
-                self.other_sprites[2].center_y - 75,
+                self.background_sprites[2].center_x,
+                self.background_sprites[2].center_y - 75,
                 arcade.color.WHITE,
                 22,
                 align="center",
@@ -649,8 +652,8 @@ A - 9     J - 1     S - 4  \
             ),
             arcade.Text(
                 "Scoreboard",
-                self.other_sprites[3].center_x - 70,
-                self.other_sprites[3].center_y + 240,
+                self.background_sprites[3].center_x - 70,
+                self.background_sprites[3].center_y + 240,
                 arcade.color.WHITE,
                 18,
                 align="center",
@@ -662,8 +665,8 @@ A - 9     J - 1     S - 4  \
                 f"\
 {self.game_manager.get_player_list()[0].get_name()}: \
 {self.game_manager.get_player_list()[0].get_score()}",
-                self.other_sprites[3].center_x - 140,
-                self.other_sprites[3].center_y + 200,
+                self.background_sprites[3].center_x - 140,
+                self.background_sprites[3].center_y + 200,
                 arcade.color.WHITE,
                 14,
                 font_name="Minecraft",
@@ -672,8 +675,8 @@ A - 9     J - 1     S - 4  \
                 f"\
 {self.game_manager.get_player_list()[1].get_name()}: \
 {self.game_manager.get_player_list()[1].get_score()}",
-                self.other_sprites[3].center_x - 140,
-                (self.other_sprites[3].center_y + 160) - offset,
+                self.background_sprites[3].center_x - 140,
+                (self.background_sprites[3].center_y + 160) - offset,
                 arcade.color.WHITE,
                 14,
                 font_name="Minecraft",
@@ -713,8 +716,8 @@ A - 9     J - 1     S - 4  \
             ),
             arcade.Text(
                 "Letter Distribution",
-                self.other_sprites[4].center_x,
-                self.other_sprites[4].center_y + 240,
+                self.background_sprites[4].center_x,
+                self.background_sprites[4].center_y + 240,
                 arcade.color.WHITE,
                 18,
                 align="center",
@@ -724,8 +727,8 @@ A - 9     J - 1     S - 4  \
             ),
             arcade.Text(
                 letter_dist,
-                self.other_sprites[4].center_x - 100,
-                self.other_sprites[4].center_y + 200,
+                self.background_sprites[4].center_x - 100,
+                self.background_sprites[4].center_y + 200,
                 arcade.color.WHITE,
                 14,
                 align="center",
@@ -747,8 +750,8 @@ A - 9     J - 1     S - 4  \
             self.text_objects.append(
                 arcade.Text(
                     f"+{score}        {word}",
-                    self.other_sprites[3].center_x - 100,
-                    (self.other_sprites[3].center_y + 180) - 20 * i,
+                    self.background_sprites[3].center_x - 100,
+                    (self.background_sprites[3].center_y + 180) - 20 * i,
                     arcade.color.WHITE,
                     12,
                     font_name="Minecraft",
@@ -761,8 +764,8 @@ A - 9     J - 1     S - 4  \
             self.text_objects.append(
                 arcade.Text(
                     f"+{score}        {word}",
-                    self.other_sprites[3].center_x - 100,
-                    (self.other_sprites[3].center_y + 140) - offset - 20 * i,
+                    self.background_sprites[3].center_x - 100,
+                    (self.background_sprites[3].center_y + 140) - offset - 20 * i,
                     arcade.color.WHITE,
                     12,
                     font_name="Minecraft",
@@ -778,5 +781,5 @@ A - 9     J - 1     S - 4  \
     def get_rack_position(self, tile_index):
         """Calculate the screen position for a rack tile at the given index."""
         x = BOARD_START_X + (RACK_TILE_SPACING * tile_index)
-        y = self.rack_sprites[0].center_y
+        y = self.background_sprites[5].center_y
         return x, y
