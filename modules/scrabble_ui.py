@@ -32,17 +32,6 @@ class ScrabbleUI(arcade.View):
     def __init__(self):
         super().__init__()
 
-        # TODO: should implement a difficulty select on start screen
-        # self.DIFFICULTY = "hard"
-
-        # TODO: optional but can implement a background select on start screen
-        bg = "gray"
-        backgrounds = {
-            "gray": "./assets/images/gray.jpg",
-            "starry": "./assets/images/starry.jpeg",
-            "mountains": "./assets/images/mountains.jpeg",
-        }
-
         # initialize game manager
         self.game_manager = GameManager(
             [("human", "player 1", 0), ("ai", "player 2", 0)]
@@ -110,9 +99,8 @@ class ScrabbleUI(arcade.View):
             center_y=BORDER_Y * 0.9,
         )
 
-        # TODO: Chane path to shuffle rack button when file exists
         shuffle_rack_button = arcade.Sprite(
-            "./assets/images/trade_in_button.png",
+            "./assets/images/shuffle_button.png",
             center_x=BUTTON_X,
             center_y=BORDER_Y * 0.7,
         )
@@ -163,7 +151,7 @@ class ScrabbleUI(arcade.View):
         self.background_sprites = arcade.SpriteList()
 
         window_background = arcade.Sprite(
-            backgrounds[bg], center_x=WINDOW_WIDTH // 2, center_y=WINDOW_HEIGHT // 2
+            "./assets/images/gray.jpg", center_x=WINDOW_WIDTH // 2, center_y=WINDOW_HEIGHT // 2
         )
         window_background.size = (WINDOW_WIDTH, WINDOW_HEIGHT)
 
@@ -224,11 +212,10 @@ class ScrabbleUI(arcade.View):
                 _, original_y = self.get_rack_position(i)
                 sprite.center_y = original_y
 
-        # TODO: Chane index 2 to shuffle rack button when file exists
         image_names = [
             "play_word_button",
             "reset_button",
-            "trade_in_button",
+            "shuffle_button",
             "trade_in_button",
         ]
         # Change button colors to indicate player hovering over them
@@ -241,6 +228,15 @@ class ScrabbleUI(arcade.View):
                 sprite.texture = arcade.load_texture(
                     f"./assets/images/{image_names[i]}.png"
                 )
+
+        if self._done_button.collides_with_point((x, y)):
+            self._done_button.texture = arcade.load_texture(
+                "./assets/images/trade_in_button_hover.png"
+            )
+        else:
+            self._done_button.texture = arcade.load_texture(
+                "./assets/images/trade_in_button.png"
+            )
 
         if self.held_tile:
             self.held_tile.sprite.center_x = x
