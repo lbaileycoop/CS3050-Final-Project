@@ -113,19 +113,20 @@ class Board:
         """Sets current_turn_tiles back to an empty list for a new turn"""
         self.current_turn_tiles = []
 
-    def play_turn(self) -> tuple[bool, dict[str, int]]:
+    def play_turn(self) -> tuple[bool, dict[str, int], bool]:
         """Performs the logic for attempting to play a turn"""
         words = self.find_words()
 
         words_dict: dict[str, int] = {}
         legal_turn = self.validate_turn(words)
+        is_bingo = len(self.current_turn_tiles) >= 7
 
         if legal_turn:
             words_dict = self.score_words(words)
             self.update_cross_checks()
             self.reset_current_turn_tiles()
 
-        return legal_turn, words_dict
+        return legal_turn, words_dict, is_bingo
 
     def test_turn(
         self, move: list[tuple[Tile, tuple[int, int]]]
@@ -156,9 +157,6 @@ class Board:
 
         for word in words:
             words_dict[tiles_to_str(word)] = self.score_word(word)
-
-        if len(self.current_turn_tiles) == 7:
-            words_dict["BINGO!!!"] = 50
 
         return words_dict
 
@@ -245,19 +243,27 @@ class Board:
             return found
 
         words_are_valid = True
-        connects_to_center = True
-        tiles_in_line = True
+        connects_to_center = False
+        forms_string = True
 
-        for i, tile in enumerate(self.current_turn_tiles):
-            coords = tile.coords
+        if len(self.current_turn_tiles) > 1:
+            coords = self.current_turn_tiles[0].coords
+            connects_to_center = find_center(coords, [])
 
-            connects_to_center = connects_to_center and find_center(tile.coords, [])
-
-            if i > 0:
-                tiles_in_line = tiles_in_line and (
-                    coords[0] == self.current_turn_tiles[i - 1].coords[0]
-                    or coords[1] == self.current_turn_tiles[i - 1].coords[1]
+            if coords[0] - self.current_turn_tiles[1].coords[0] == 0:
+                word = (
+                    self.find_string(coords, 0, -1)[::-1]
+                    + self.find_string(coords, 0, 1)[1:]
                 )
+            else:
+                word = (
+                    self.find_string(coords, -1, 0)[::-1]
+                    + self.find_string(coords, 1, 0)[1:]
+                )
+
+            for tile in self.current_turn_tiles:
+                if tile not in word:
+                    forms_string = False
 
         if len(words) == 0:
             words_are_valid = False
@@ -265,7 +271,7 @@ class Board:
         for word in words:
             words_are_valid = words_are_valid and valid_word(tiles_to_str(word))
 
-        return words_are_valid and connects_to_center and tiles_in_line
+        return forms_string and connects_to_center and words_are_valid
 
     def find_words(self) -> list[list[Tile]]:
         """Finds all words created by the current turn"""

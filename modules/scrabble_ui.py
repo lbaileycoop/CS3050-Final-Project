@@ -36,7 +36,7 @@ class ScrabbleUI(arcade.View):
         self.game_manager = GameManager(
             [
                 ("human", "player", 0),
-                ("ai", "computer", 1),
+                ("ai", "computer", 2),
             ]
         )
 
@@ -402,7 +402,7 @@ class ScrabbleUI(arcade.View):
                 font_name="Minecraft",
             ).draw()
             arcade.Text(
-                "Click anywhere on screen to continue",
+                "Press ESC to close",
                 BOARD_CENTER_X,
                 BOARD_CENTER_Y - 50,
                 arcade.color.WHITE,
@@ -485,8 +485,8 @@ class ScrabbleUI(arcade.View):
                 self.blank_tile_position = None
                 return
 
-        if self.trade_in_active:
-            if symbol == arcade.key.ESCAPE:
+        if symbol == arcade.key.ESCAPE:
+            if self.trade_in_active:
                 self.trade_in_active = False
                 self.game_manager.get_current_turn_player().add_tiles(
                     self.tiles_to_trade
@@ -494,15 +494,21 @@ class ScrabbleUI(arcade.View):
                 self.tiles_to_trade.clear()
                 self.reset_turn()
                 return
+            if self.bingo:
+                self.bingo = False
 
     def play_turn(self):
         """
         Confirms the played turn's legality and performs
         the logic needed to finish a played turn
         """
-        is_valid, words = self.game_manager.get_board().play_turn()
+        is_valid, words, is_bingo = self.game_manager.get_board().play_turn()
         if is_valid:
             score = sum(words.values())
+
+            if is_bingo:
+                score += 50
+                self.bingo = True
 
             self.game_manager.get_current_turn_player().add_score(score)
 
@@ -728,26 +734,31 @@ class ScrabbleUI(arcade.View):
             ),
         ]
 
+        turns_shown = 20 // len(self.game_manager.get_player_list())
+        offset = 20 * (1 + turns_shown)
+
         for i, player in enumerate(self.game_manager.get_player_list()):
             self.text_objects.append(
                 arcade.Text(
-                    f"{player.get_name()}: {player.get_score()}",
+                    f"{player.get_name()}:   {player.get_score()}",
                     BACKGROUND_COORDS["scoreboard"][0] - 140,
-                    BACKGROUND_COORDS["scoreboard"][1] + 200 - (120 * i),
+                    BACKGROUND_COORDS["scoreboard"][1] + 210 - (offset * i),
                     arcade.color.WHITE,
                     14,
                     font_name="Minecraft",
                 )
             )
 
-            for j, score in enumerate(reversed(self.game_history[player][-5:])):
+            for j, score in enumerate(
+                reversed(self.game_history[player][-turns_shown:])
+            ):
                 self.text_objects.append(
                     arcade.Text(
                         f"Turn {len(self.game_history[player]) - j}: +{score}",
-                        BACKGROUND_COORDS["scoreboard"][0] - 100,
+                        BACKGROUND_COORDS["scoreboard"][0] + 50,
                         BACKGROUND_COORDS["scoreboard"][1]
-                        + 200
-                        - (120 * i)
+                        + 210
+                        - (offset * i)
                         - (20 * (j + 1)),
                         arcade.color.WHITE,
                         12,

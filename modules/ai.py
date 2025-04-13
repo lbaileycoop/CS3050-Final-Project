@@ -224,7 +224,6 @@ class AI(Player):
         chosen_move = chosen_moves[self.personality]
 
         if chosen_move is None:
-            print("No moves found")
             return False
 
         for tile in chosen_move:
