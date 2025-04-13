@@ -108,6 +108,8 @@ class AI(Player):
 
         return possible_moves
 
+    # suppress warning for too many parameters
+    # pylint: disable=R0913,R0917
     def find_move(
         self,
         target: str,

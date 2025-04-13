@@ -3,7 +3,17 @@
 from typing import Tuple
 from itertools import permutations, combinations
 
-from .config import SIZE, DICTIONARY, ALPHABET
+from .config import (
+    SIZE,
+    DICTIONARY,
+    ALPHABET,
+    BOARD_START_X,
+    BOARD_START_Y,
+    TILE_SIZE,
+    TILE_GAP,
+    RACK_TILE_SPACING,
+    BACKGROUND_COORDS,
+)
 from .tile import Tile
 
 
@@ -15,6 +25,20 @@ def to_coords(index: int) -> Tuple[int, int]:
 def from_coords(x: int, y: int) -> Tuple[int, int]:
     """Returns the 1-d index of a tile based on the x and y values"""
     return x + ((SIZE - y) * SIZE)
+
+
+def get_board_position(row, col):
+    """Calculate the screen position for a board tile at the given row and column."""
+    x = col * (TILE_SIZE + TILE_GAP) + BOARD_START_X
+    y = (SIZE - 1 - row) * (TILE_SIZE + TILE_GAP) + BOARD_START_Y
+    return x, y
+
+
+def get_rack_position(tile_index):
+    """Calculate the screen position for a rack tile at the given index."""
+    x = BOARD_START_X + (RACK_TILE_SPACING * tile_index)
+    y = BACKGROUND_COORDS["rack"][1]
+    return x, y
 
 
 def valid_word(word: str) -> bool:
