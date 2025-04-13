@@ -29,16 +29,11 @@ class ScrabbleUI(arcade.View):
     Class representing the Scrabble UI
     """
 
-    def __init__(self):
+    def __init__(self, players: list[str, str]):
         super().__init__()
 
         # initialize game manager
-        self.game_manager = GameManager(
-            [
-                ("human", "player", 0),
-                ("ai", "computer", 2),
-            ]
-        )
+        self.game_manager = GameManager(players)
 
         # For displaying the game history
         self.game_history: dict[Player : list[int]] = {}
@@ -647,7 +642,7 @@ class ScrabbleUI(arcade.View):
             arcade.Text(
                 turn_text,
                 BACKGROUND_COORDS["turn_display"][0],
-                BACKGROUND_COORDS["turn_display"][1] - 75,
+                BACKGROUND_COORDS["turn_display"][1] - 65,
                 arcade.color.WHITE,
                 22,
                 align="center",

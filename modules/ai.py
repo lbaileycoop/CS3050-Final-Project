@@ -199,10 +199,12 @@ class AI(Player):
         max_word_len = 0
         chosen_moves = [None, None, None, None]
         for move in moves:
-            is_valid, words = self.board.test_turn(move)
+            is_valid, words, is_bingo = self.board.test_turn(move)
 
             if is_valid:
                 score = sum(words.values())
+                if is_bingo:
+                    score += 50
                 if score not in valid_moves:
                     valid_moves[score] = []
                 valid_moves[score].append(move)

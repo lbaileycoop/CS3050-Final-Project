@@ -54,5 +54,6 @@ class StartScreen(arcade.View):
 
     def start_game(self):
         """Changes the view to the Scrabble game"""
-        game_view = ScrabbleUI()
+        players = [("human", "player"), ("ai", "computer")]
+        game_view = ScrabbleUI(players)
         self.window.show_view(game_view)

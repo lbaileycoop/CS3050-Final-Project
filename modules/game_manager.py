@@ -28,9 +28,7 @@ class GameManager:
 
         for player in players:
             if player[0] == "ai":
-                self.player_list.append(
-                    AI(player[1], self.drawbag, self.board, player[2])
-                )
+                self.player_list.append(AI(player[1], self.drawbag, self.board, 0))
             elif player[0] == "human":
                 self.player_list.append(Player(player[1], self.drawbag))
             else:

@@ -141,6 +141,7 @@ class Board:
 
         words_dict: dict[str, int] = {}
         legal_turn = self.validate_turn(words)
+        is_bingo = len(self.current_turn_tiles) >= 7
 
         if legal_turn:
             words_dict = self.score_words(words)
@@ -149,7 +150,7 @@ class Board:
 
         self.clear_current_turn_tiles()
 
-        return legal_turn, words_dict
+        return legal_turn, words_dict, is_bingo
 
     def score_words(self, words: list[list[Tile]]) -> dict[str, int]:
         """Returns a dict matching every word in words to its score"""
