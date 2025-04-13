@@ -55,8 +55,11 @@ class ScrabbleUI(arcade.View):
         self.tiles_to_trade: list[Tile] = []
 
         # Get input for blank tiles
-        self.text_input_active: bool = False
+        self.reading_blank_input: bool = False
         self.blank_tile_position: tuple[int, int] = None
+
+        # stop functions if game is over
+        self.game_over = False
 
         """ Sprites creation for graphics """
         # displays the current board state
@@ -204,7 +207,9 @@ class ScrabbleUI(arcade.View):
         Called when the user presses a mouse button.
         """
         # Check if a rack tile was clicked
-        if not isinstance(self.game_manager.get_current_turn_player(), AI):
+        if not isinstance(self.game_manager.get_current_turn_player(), AI) and not (
+            self.reading_blank_input or self.game_over
+        ):
             for i, tile in enumerate(
                 self.game_manager.get_current_turn_player().get_rack_tiles()
             ):
@@ -213,7 +218,7 @@ class ScrabbleUI(arcade.View):
                     self.held_tile_index = i
                     break
 
-        if not self.trade_in_active:
+        if not (self.trade_in_active or self.reading_blank_input or self.game_over):
             # Check if a button was clicked
             for i, sprite in enumerate(self.button_sprites):
                 if sprite.collides_with_point((x, y)):
@@ -226,16 +231,19 @@ class ScrabbleUI(arcade.View):
                     elif i == 3:
                         self.trade_in()
         elif self.done_button.collides_with_point((x, y)):
-            self.game_manager.get_current_turn_player().refill_rack(
-                self.game_manager.get_drawbag()
-            )
-            self.game_history[self.game_manager.get_current_turn_player()].append(0)
+            if self.tiles_to_trade:
+                self.game_manager.get_current_turn_player().refill_rack(
+                    self.game_manager.get_drawbag()
+                )
+                self.game_history[self.game_manager.get_current_turn_player()].append(0)
 
-            if len(self.tiles_to_trade) == 0:
-                self.skip_turn()
-                return
+                if len(self.tiles_to_trade) == 0:
+                    self.skip_turn()
+                    return
 
-            self.next_turn()
+                self.next_turn()
+            elif self.game_over:
+                arcade.close_window()
 
     def on_mouse_release(self, x, y, button, modifiers):
         """
@@ -246,9 +254,8 @@ class ScrabbleUI(arcade.View):
 
             # If a tile is dropped over a space on the board, update the board position to that tile
             for i, board_sprite in enumerate(self.board_sprites):
-                if (
-                    board_sprite.collides_with_point((x, y))
-                    and not self.trade_in_active
+                if board_sprite.collides_with_point((x, y)) and not (
+                    self.trade_in_active or self.reading_blank_input or self.game_over
                 ):
                     col, row = to_coords(i)
 
@@ -265,7 +272,7 @@ class ScrabbleUI(arcade.View):
                     if new_tile.letter == "":  # This is a blank tile
 
                         # Prompt user to select a letter for the blank tile
-                        self.text_input_active = True
+                        self.reading_blank_input = True
                         self.blank_tile_position = (row, col)
 
                         # Update display
@@ -347,7 +354,7 @@ class ScrabbleUI(arcade.View):
     def draw_popups(self):
         """Draws any popups which are currently active"""
         # Draw blank tile prompt if active
-        if self.text_input_active:
+        if self.reading_blank_input:
             arcade.draw_sprite(self.popup)
             arcade.Text(
                 "Select a letter for the blank tile:",
@@ -462,11 +469,62 @@ class ScrabbleUI(arcade.View):
                 font_name="Minecraft",
             ).draw()
 
+        if self.game_over:
+            arcade.draw_sprite(self.popup)
+            arcade.Text(
+                "Game Over!",
+                BOARD_CENTER_X,
+                BOARD_CENTER_Y + 120,
+                arcade.color.WHITE,
+                24,
+                align="center",
+                anchor_x="center",
+                anchor_y="center",
+                font_name="Minecraft",
+            ).draw()
+            arcade.Text(
+                "Final Scores:",
+                BOARD_CENTER_X,
+                BOARD_CENTER_Y + 80,
+                arcade.color.WHITE,
+                18,
+                align="center",
+                anchor_x="center",
+                anchor_y="center",
+                font_name="Minecraft",
+            ).draw()
+            for i, player in enumerate(self.game_manager.get_player_list()):
+                arcade.Text(
+                    f"{player.get_name()}: {player.get_score()} points",
+                    BOARD_CENTER_X,
+                    BOARD_CENTER_Y + 40 - (25 * i),
+                    arcade.color.WHITE,
+                    14,
+                    align="center",
+                    anchor_x="center",
+                    anchor_y="center",
+                    font_name="Minecraft",
+                ).draw()
+
+            arcade.draw_sprite(self.done_button)
+
+            arcade.Text(
+                "Done",
+                self.done_button.center_x,
+                self.done_button.center_y,
+                arcade.color.WHITE,
+                16,
+                align="center",
+                anchor_x="center",
+                anchor_y="center",
+                font_name="Minecraft",
+            ).draw()
+
     def on_key_press(self, symbol, modifiers):
         """
         Handle keyboard input for blank tile letter selection
         """
-        if self.text_input_active:
+        if self.reading_blank_input:
             if 97 <= symbol <= 122:
                 letter = chr(symbol).lower()
                 row, col = self.blank_tile_position
@@ -476,7 +534,7 @@ class ScrabbleUI(arcade.View):
 
                 self.update_board_display()
 
-                self.text_input_active = False
+                self.reading_blank_input = False
                 self.blank_tile_position = None
                 return
 
@@ -586,9 +644,8 @@ class ScrabbleUI(arcade.View):
     def end_game(self):
         """Ends the game"""
         self.update_displays()
-        final_scores = self.game_manager.end_game()
-        print(final_scores)
-        arcade.close_window()
+        self.game_manager.end_game()
+        self.game_over = True
 
     def update_displays(self):
         """Calls all 3 update methods"""
