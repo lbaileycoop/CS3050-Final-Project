@@ -30,6 +30,8 @@ class ScrabbleUI(arcade.View):
     Class representing the Scrabble UI
     """
 
+    # suppress warning for too many statements
+    # pylint: disable=R0915
     def __init__(self, players: list[str, str]):
         super().__init__()
 
@@ -92,7 +94,7 @@ class ScrabbleUI(arcade.View):
             arcade.Sprite(
                 "./assets/images/settings_button.png",
                 center_x=WINDOW_WIDTH - 120,
-                center_y =WINDOW_HEIGHT - 50
+                center_y=WINDOW_HEIGHT - 50,
             )
         )
 
@@ -170,7 +172,14 @@ class ScrabbleUI(arcade.View):
             sprite.center_y = BOARD_CENTER_Y + bg["offset"][1]
             self.bg_images.append(sprite)
 
-        self.scrabble_img, self.gray, self.starry, self.mountains, self.wood, self.games = self.bg_images
+        (
+            self.scrabble_img,
+            self.gray,
+            self.starry,
+            self.mountains,
+            self.wood,
+            self.games,
+        ) = self.bg_images
 
         # Displays all text
         self.text_objects: list[arcade.Text] = []
@@ -247,6 +256,8 @@ class ScrabbleUI(arcade.View):
             else:
                 self.held_tile.sprite.scale = 1.2
 
+    # suppress warning for too many branches
+    # pylint: disable=R0912
     def on_mouse_press(self, x, y, button, modifiers):
         """
         Called when the user presses a mouse button.
@@ -641,8 +652,6 @@ class ScrabbleUI(arcade.View):
                 self.settings_active = False
                 self.reset_turn()
                 return
-        
-
 
     def play_turn(self):
         """
@@ -708,7 +717,7 @@ class ScrabbleUI(arcade.View):
         """Trade in any number (incl. 0) of tiles for new ones and end your turn"""
         self.reset_turn()
         self.trade_in_active = True
-    
+
     def settings(self):
         """Display settings"""
         self.reset_turn()
@@ -928,11 +937,14 @@ class ScrabbleUI(arcade.View):
                         font_name="Minecraft",
                     )
                 )
+
     def update_background_display(self):
-        """Update the background display based on the selected background"""        
+        """Update the background display based on the selected background"""
         window_background = arcade.Sprite(
-            BACKGROUNDS[self.bg], center_x=WINDOW_WIDTH // 2, center_y=WINDOW_HEIGHT // 2
+            BACKGROUNDS[self.bg],
+            center_x=WINDOW_WIDTH // 2,
+            center_y=WINDOW_HEIGHT // 2,
         )
         window_background.size = (WINDOW_WIDTH, WINDOW_HEIGHT)
-        
+
         self.background_sprites[0] = window_background

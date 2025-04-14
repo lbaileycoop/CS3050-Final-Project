@@ -193,34 +193,30 @@ class AI(Player):
         """
         moves = self.find_moves()
         valid_moves = {}
-        max_score = 0
-        max_words = 0
-        max_tiles = 0
-        max_word_len = 0
+        max_stats = [0, 0, 0, 0]
         chosen_moves = [None, None, None, None]
         for move in moves:
             is_valid, words, is_bingo = self.board.test_turn(move)
 
             if is_valid:
-                score = sum(words.values())
-                if is_bingo:
-                    score += 50
+                score = sum(words.values()) + (is_bingo * 50)
+
                 if score not in valid_moves:
                     valid_moves[score] = []
                 valid_moves[score].append(move)
 
-                if score > max_score:
-                    max_score = score
+                if score > max_stats[0]:
+                    max_stats[0] = score
                     chosen_moves[0] = move
-                if len(words) > max_words:
-                    max_words = len(words)
+                if len(words) > max_stats[1]:
+                    max_stats[1] = len(words)
                     chosen_moves[1] = move
-                if len(move) > max_tiles:
-                    max_tiles = len(move)
+                if len(move) > max_stats[2]:
+                    max_stats[2] = len(move)
                     chosen_moves[2] = move
                 for word in words.keys():
-                    if len(word) > max_word_len:
-                        max_word_len = len(word)
+                    if len(word) > max_stats[3]:
+                        max_stats[3] = len(word)
                         chosen_moves[3] = move
 
         chosen_move = chosen_moves[self.personality]
