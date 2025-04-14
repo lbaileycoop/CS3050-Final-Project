@@ -10,6 +10,8 @@ class StartScreen(arcade.View):
 
     def __init__(self):
         super().__init__()
+        self.window.set_fullscreen(True)
+
         self.background_color = (
             arcade.color.DARK_SLATE_GRAY
         )  # Fallback color if image fails

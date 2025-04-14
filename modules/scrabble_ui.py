@@ -81,6 +81,14 @@ class ScrabbleUI(arcade.View):
                 )
             )
 
+        self.button_sprites.append(
+            arcade.Sprite(
+                "./assets/images/exit.png",
+                center_x=WINDOW_WIDTH - 50,
+                center_y=WINDOW_HEIGHT - 50,
+            )
+        )
+
         self.background_sprites: arcade.SpriteList = arcade.SpriteList()
 
         window_background = arcade.Sprite(
@@ -169,6 +177,7 @@ class ScrabbleUI(arcade.View):
             "reset_button",
             "shuffle_button",
             "trade_in_button",
+            "exit",
         ]
         # Change button colors to indicate player hovering over them
         for i, sprite in enumerate(self.button_sprites):
@@ -230,6 +239,8 @@ class ScrabbleUI(arcade.View):
                         self.shuffle_rack()
                     elif i == 3:
                         self.trade_in()
+                    elif i == 4:
+                        arcade.close_window()
         elif self.done_button.collides_with_point((x, y)):
             if self.tiles_to_trade:
                 self.game_manager.get_current_turn_player().refill_rack(
