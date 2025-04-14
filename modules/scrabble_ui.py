@@ -34,7 +34,7 @@ class ScrabbleUI(arcade.View):
         super().__init__()
 
         # default background
-        self.bg: str = "gray"
+        self.bg: str = "pattern"
 
         # initialize game manager
         self.game_manager = GameManager(players)
