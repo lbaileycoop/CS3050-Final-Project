@@ -88,3 +88,12 @@ DICTIONARY = pygtrie.CharTrie()
 with open("./assets/dictionary.csv", "r", encoding="utf-8") as file:
     for line in file:
         DICTIONARY[line.strip()] = True
+
+BACKGROUNDS = {
+            "gray": "./assets/images/gray.png",
+            "starry": "./assets/images/starry.png",
+            "mountains": "./assets/images/mountains.png",
+            "scrabble": "./assets/images/start_background.png",
+            "pattern": "./assets/images/pattern.png",
+            "games": "./assets/images/games.png"
+        }

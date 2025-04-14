@@ -13,6 +13,7 @@ from .config import (
     BOARD_CENTER_Y,
     BACKGROUND_COORDS,
     LETTER_DIST,
+    BACKGROUNDS,
 )
 from .tile import Tile
 from .board import EMPTY_TILES
@@ -32,6 +33,9 @@ class ScrabbleUI(arcade.View):
     def __init__(self, players: list[str, str]):
         super().__init__()
 
+        # default background
+        self.bg: str = "gray"
+
         # initialize game manager
         self.game_manager = GameManager(players)
 
@@ -49,6 +53,9 @@ class ScrabbleUI(arcade.View):
 
         # Remember # of turns skipped in a row
         self.skip_count: int = 0
+
+        # Get input for settings
+        self.settings_active: bool = False
 
         # Get input for traded tiles
         self.trade_in_active: bool = False
@@ -83,6 +90,14 @@ class ScrabbleUI(arcade.View):
 
         self.button_sprites.append(
             arcade.Sprite(
+                "./assets/images/settings_button.png",
+                center_x=WINDOW_WIDTH - 120,
+                center_y =WINDOW_HEIGHT - 50
+            )
+        )
+
+        self.button_sprites.append(
+            arcade.Sprite(
                 "./assets/images/exit.png",
                 center_x=WINDOW_WIDTH - 50,
                 center_y=WINDOW_HEIGHT - 50,
@@ -92,7 +107,7 @@ class ScrabbleUI(arcade.View):
         self.background_sprites: arcade.SpriteList = arcade.SpriteList()
 
         window_background = arcade.Sprite(
-            "./assets/images/gray.jpg",
+            BACKGROUNDS["gray"],
             center_x=WINDOW_WIDTH // 2,
             center_y=WINDOW_HEIGHT // 2,
         )
@@ -136,6 +151,27 @@ class ScrabbleUI(arcade.View):
         self.background_sprites.append(letter_dist_background)
         self.background_sprites.append(rack_background)
 
+        # Displays background image options
+        self.bg_images = arcade.SpriteList()
+
+        bg_data = [
+            {"key": "scrabble", "offset": (-150, 20)},
+            {"key": "gray", "offset": (-150, -80)},
+            {"key": "starry", "offset": (0, 20)},
+            {"key": "mountains", "offset": (150, 20)},
+            {"key": "pattern", "offset": (0, -80)},
+            {"key": "games", "offset": (150, -80)},
+        ]
+
+        for bg in bg_data:
+            sprite = arcade.Sprite(BACKGROUNDS[bg["key"]])
+            sprite.size = (WINDOW_WIDTH * 0.1, WINDOW_HEIGHT * 0.1)
+            sprite.center_x = BOARD_CENTER_X + bg["offset"][0]
+            sprite.center_y = BOARD_CENTER_Y + bg["offset"][1]
+            self.bg_images.append(sprite)
+
+        self.scrabble_img, self.gray, self.starry, self.mountains, self.wood, self.games = self.bg_images
+
         # Displays all text
         self.text_objects: list[arcade.Text] = []
         arcade.load_font("./assets/Minecraft.ttf")
@@ -177,6 +213,7 @@ class ScrabbleUI(arcade.View):
             "reset_button",
             "shuffle_button",
             "trade_in_button",
+            "settings_button",
         ]
         # Change button colors to indicate player hovering over them
         for i, sprite in enumerate(self.button_sprites[:-1]):
@@ -239,6 +276,8 @@ class ScrabbleUI(arcade.View):
                     elif i == 3:
                         self.trade_in()
                     elif i == 4:
+                        self.settings()
+                    elif i == 5:
                         arcade.close_window()
         elif self.done_button.collides_with_point((x, y)):
             if self.tiles_to_trade:
@@ -254,6 +293,20 @@ class ScrabbleUI(arcade.View):
                 self.next_turn()
             elif self.game_over:
                 arcade.close_window()
+        if self.settings_active:
+            bgs = [
+                "scrabble",
+                "gray",
+                "starry",
+                "mountains",
+                "pattern",
+                "games",
+            ]
+            for i, sprite in enumerate(self.bg_images):
+                if sprite.collides_with_point((x, y)):
+                    self.bg = bgs[i]
+                    self.update_background_display()
+                    break
 
     def on_mouse_release(self, x, y, button, modifiers):
         """
@@ -529,6 +582,31 @@ class ScrabbleUI(arcade.View):
                 anchor_y="center",
                 font_name="Minecraft",
             ).draw()
+        if self.settings_active:
+            arcade.draw_sprite(self.popup)
+            arcade.Text(
+                "Click to change background",
+                BOARD_CENTER_X,
+                BOARD_CENTER_Y + 120,
+                arcade.color.WHITE,
+                16,
+                align="center",
+                anchor_x="center",
+                anchor_y="center",
+                font_name="Minecraft",
+            ).draw()
+            arcade.Text(
+                "(Press ESC when done)",
+                BOARD_CENTER_X,
+                BOARD_CENTER_Y + 90,
+                arcade.color.WHITE,
+                16,
+                align="center",
+                anchor_x="center",
+                anchor_y="center",
+                font_name="Minecraft",
+            ).draw()
+            self.bg_images.draw()
 
     def on_key_press(self, symbol, modifiers):
         """
@@ -559,6 +637,12 @@ class ScrabbleUI(arcade.View):
                 return
             if self.bingo:
                 self.bingo = False
+            if self.settings_active:
+                self.settings_active = False
+                self.reset_turn()
+                return
+        
+
 
     def play_turn(self):
         """
@@ -624,6 +708,11 @@ class ScrabbleUI(arcade.View):
         """Trade in any number (incl. 0) of tiles for new ones and end your turn"""
         self.reset_turn()
         self.trade_in_active = True
+    
+    def settings(self):
+        """Display settings"""
+        self.reset_turn()
+        self.settings_active = True
 
     def skip_turn(self):
         """Skips the current turn without playing a word or drawing new tiles"""
@@ -662,6 +751,7 @@ class ScrabbleUI(arcade.View):
         self.update_board_display()
         self.update_rack_display()
         self.update_text_display()
+        self.update_background_display()
 
     def update_board_display(self):
         """Update the visual representation of the board to match the current board state"""
@@ -838,3 +928,11 @@ class ScrabbleUI(arcade.View):
                         font_name="Minecraft",
                     )
                 )
+    def update_background_display(self):
+        """Update the background display based on the selected background"""        
+        window_background = arcade.Sprite(
+            BACKGROUNDS[self.bg], center_x=WINDOW_WIDTH // 2, center_y=WINDOW_HEIGHT // 2
+        )
+        window_background.size = (WINDOW_WIDTH, WINDOW_HEIGHT)
+        
+        self.background_sprites[0] = window_background
