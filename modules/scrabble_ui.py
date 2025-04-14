@@ -177,10 +177,9 @@ class ScrabbleUI(arcade.View):
             "reset_button",
             "shuffle_button",
             "trade_in_button",
-            "exit",
         ]
         # Change button colors to indicate player hovering over them
-        for i, sprite in enumerate(self.button_sprites):
+        for i, sprite in enumerate(self.button_sprites[:-1]):
             if sprite.collides_with_point((x, y)):
                 sprite.texture = arcade.load_texture(
                     f"./assets/images/{image_names[i]}_hover.png"
@@ -794,6 +793,17 @@ class ScrabbleUI(arcade.View):
                 font_name="Minecraft",
                 width=205,
                 multiline=True,
+            ),
+            arcade.Text(
+                f"Tiles Remaining: {self.game_manager.get_drawbag().get_remaining_tiles()}",
+                BACKGROUND_COORDS["letter_dist"][0],
+                BACKGROUND_COORDS["letter_dist"][1] - 240,
+                arcade.color.WHITE,
+                16,
+                align="center",
+                anchor_x="center",
+                anchor_y="center",
+                font_name="Minecraft",
             ),
         ]
 

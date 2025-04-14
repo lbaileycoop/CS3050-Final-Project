@@ -244,7 +244,7 @@ class Board:
             return found
 
         words_are_valid = True
-        connects_to_center = False
+        connects_to_center = True
         forms_string = True
 
         if len(self.current_turn_tiles) > 1:
