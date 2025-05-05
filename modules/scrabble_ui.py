@@ -291,7 +291,7 @@ class ScrabbleUI(arcade.View):
                     elif i == 5:
                         arcade.close_window()
         elif self.done_button.collides_with_point((x, y)):
-            if self.tiles_to_trade:
+            if self.trade_in_active:
                 self.game_manager.get_current_turn_player().refill_rack(
                     self.game_manager.get_drawbag()
                 )
